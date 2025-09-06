@@ -58,9 +58,6 @@ const Header = () => {
         <div className="flex items-center space-x-3">
           <Link to="/" className="flex items-center space-x-2">
             <AccountBalanceIcon style={{ color: "#AAAAAA" }} fontSize="large" />
-            <span className="text-lg font-bold" style={{ color: "#DDDDDD" }}>
-              TaxAct
-            </span>
           </Link>
         </div>
 

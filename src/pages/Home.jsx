@@ -21,7 +21,7 @@ const fadeIn = {
 
 const heroSlides = [
   {
-    img: "/hero-1.png",
+    img: "/hero-3.jpg",
     title: "Navigate Tax Acts",
     desc: "Your complete resource for tax legislation and news.",
     btn1: { text: "Explore Acts", to: "/acts" },
@@ -35,7 +35,7 @@ const heroSlides = [
     btn2: { text: "Learn More", to: "/about" },
   },
   {
-    img: "/hero-3.png",
+    img: "/hero-3.jpg",
     title: "Stay Informed",
     desc: "Get the latest updates about tax laws and policies.",
     btn1: { text: "See News", to: "/news" },
@@ -47,25 +47,25 @@ const exploreCards = [
   {
     title: "Acts Library",
     desc: "Search and access every act in one place.",
-    img: "/hero-3.png",
+    img: "/hero-3.jpg",
     to: "/acts",
   },
   {
     title: "Compare Tools",
     desc: "Spot changes between different versions quickly.",
-    img: "/compare-bg.jpg",
+    img: "/hero-1.png",
     to: "/compare",
   },
   {
     title: "Tax News",
     desc: "Stay up to date with tax-related policies.",
-    img: "/news-bg.jpg",
+    img: "/hero-3.png",
     to: "/news",
   },
   {
     title: "Insights",
     desc: "Deep analysis of legislative changes and impacts.",
-    img: "/hero-3.png",
+    img: "/hero-1.png",
     to: "/insights",
   },
 ];
@@ -260,23 +260,23 @@ const Home = () => {
               {exploreCards.map((card, i) => (
                 <div
                   key={i}
-                  className="w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 flex-shrink-0 px-3"
+                  className="w-1/5 sm:w-1/8 md:w-1/10 lg:w-1/12 flex-shrink-0 px-0.5"
                 >
-                  <div className="rounded-xl overflow-hidden shadow-lg group relative aspect-[4/3]">
+                  <div className="rounded-md overflow-hidden shadow group relative aspect-square">
                     <img
                       src={card.img}
                       alt={card.title}
                       className="w-full h-full object-cover transform group-hover:scale-105 transition duration-500"
                     />
                     <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition" />
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-                      <h3 className="text-lg font-bold text-white mb-2">{card.title}</h3>
-                      <p className="text-gray-200 mb-3 text-sm">{card.desc}</p>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-0.5">
+                      <h3 className="text-[8px] font-semibold text-white mb-0.5">{card.title}</h3>
+                      <p className="text-gray-200 mb-0.5 text-[8px] leading-tight">{card.desc}</p>
                       <Link
                         to={card.to}
-                        className="bg-white text-black px-4 py-1.5 rounded-md font-semibold hover:bg-gray-200 transition text-xs"
+                        className="bg-white text-black px-1 py-0.5 rounded-sm font-medium hover:bg-gray-200 transition text-[8px]"
                       >
-                        Learn More
+                        Learn
                       </Link>
                     </div>
                   </div>
@@ -287,26 +287,26 @@ const Home = () => {
             {/* Left Arrow */}
             <button
               onClick={prevCard}
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/70 backdrop-blur-md shadow-lg hover:bg-white text-black rounded-full p-3 transition"
+              className="absolute left-1 top-1/2 -translate-y-1/2 bg-white/70 backdrop-blur-md shadow-lg hover:bg-white text-black rounded-full p-0.5 transition"
             >
-              <ArrowBackIosNewIcon fontSize="small" />
+              <ArrowBackIosNewIcon style={{ fontSize: "12px" }} />
             </button>
 
             {/* Right Arrow */}
             <button
               onClick={nextCard}
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/70 backdrop-blur-md shadow-lg hover:bg-white text-black rounded-full p-3 transition"
+              className="absolute right-1 top-1/2 -translate-y-1/2 bg-white/70 backdrop-blur-md shadow-lg hover:bg-white text-black rounded-full p-0.5 transition"
             >
-              <ArrowForwardIosIcon fontSize="small" />
+              <ArrowForwardIosIcon style={{ fontSize: "12px" }} />
             </button>
 
             {/* Dots */}
-            <div className="flex justify-center gap-3 mt-8">
+            <div className="flex justify-center gap-1.5 mt-4">
               {exploreCards.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setCardIndex(i)}
-                  className={`w-3 h-3 rounded-full transition ${
+                  className={`w-1 h-1 rounded-full transition ${
                     i === cardIndex ? "bg-black" : "bg-gray-400"
                   }`}
                 />
