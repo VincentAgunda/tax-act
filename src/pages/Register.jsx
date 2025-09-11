@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import { auth, db } from "../firebase";
+import { supabase } from "../supabaseClient"; // Make sure this path is correct
 import { useAuth } from "../context/AuthContext";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
 const fadeIn = {
@@ -19,13 +17,12 @@ const Register = () => {
   const [lastName, setLastName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false); // New state for success message
 
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
-    // Redirect to home if already logged in
     if (currentUser) {
       navigate("/");
     }
@@ -33,154 +30,156 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate passwords match
+    setError(""); // Reset error on new submission
+
     if (password !== confirmPassword) {
       return setError("Passwords do not match");
     }
 
-    // Validate password strength
     if (password.length < 6) {
-      return setError("Password should be at least 6 characters");
+      return setError("Password must be at least 6 characters long");
     }
 
     try {
-      setError("");
       setLoading(true);
-
-      // Create user with email and password
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
-
-      // Update profile with display name
-      await updateProfile(user, { 
-        displayName: `${firstName} ${lastName}` 
-      });
-
-      // Create user document in Firestore
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
-        firstName,
-        lastName,
-        email,
-        displayName: `${firstName} ${lastName}`,
-        isAdmin: false, // Default to non-admin
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      // Navigate to home page after successful registration
-      navigate("/");
-    } catch (error) {
-      console.error("Registration error:", error);
       
-      // Handle specific error cases
-      if (error.code === "auth/email-already-in-use") {
-        setError("This email is already registered. Please try logging in.");
-      } else if (error.code === "auth/invalid-email") {
-        setError("Invalid email address format.");
-      } else if (error.code === "auth/weak-password") {
-        setError("Password is too weak. Please choose a stronger password.");
-      } else {
-        setError("Failed to create account. Please try again later.");
-      }
-    }
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+          },
+        },
+      });
 
-    setLoading(false);
+      if (signUpError) throw signUpError;
+      
+      // Instead of navigating, show the success message
+      setIsSubmitted(true);
+
+    } catch (err) {
+      console.error("Registration error:", err);
+      setError(err.message || "Failed to create an account. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black relative">
-      {/* Background Overlay */}
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url(/hero-1.png)" }}
       />
       <div className="absolute inset-0 bg-black/60" />
 
-      {/* Register Card */}
       <motion.div
         initial="hidden"
         animate="visible"
         variants={fadeIn}
         className="relative z-10 max-w-lg w-full bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-xl"
       >
-        <h2 className="text-center text-3xl font-extrabold text-white mb-4">
-          Create Account
-        </h2>
-        <p className="text-center text-gray-300 text-sm mb-6">
-          Already have an account?{" "}
-          <Link to="/login" className="text-white font-medium hover:underline">
-            Sign in here
-          </Link>
-        </p>
-
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
+        {isSubmitted ? (
+          <div className="text-center">
+            <h2 className="text-3xl font-extrabold text-white mb-4">
+              ✅ Registration Successful!
+            </h2>
+            <p className="text-gray-200 text-lg">
+              We've sent a confirmation link to **{email}**.
+            </p>
+            <p className="text-gray-300 mt-2">
+              Please check your inbox (and spam folder) to activate your account before logging in.
+            </p>
+            <Link 
+              to="/login" 
+              className="mt-6 inline-block w-full bg-white text-black py-3 rounded-md font-semibold hover:bg-gray-200 transition"
+            >
+              Back to Login
+            </Link>
           </div>
+        ) : (
+          <>
+            <h2 className="text-center text-3xl font-extrabold text-white mb-4">
+              Create Account
+            </h2>
+            <p className="text-center text-gray-300 text-sm mb-6">
+              Already have an account?{" "}
+              <Link to="/login" className="text-white font-medium hover:underline">
+                Sign in here
+              </Link>
+            </p>
+
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                {error}
+              </div>
+            )}
+
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  placeholder="First Name"
+                  required
+                  className="p-3 rounded-md bg-black/20 border border-gray-400 text-white placeholder-gray-300 focus:ring-2 focus:ring-white"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  autoComplete="given-name"
+                />
+                <input
+                  type="text"
+                  placeholder="Last Name"
+                  required
+                  className="p-3 rounded-md bg-black/20 border border-gray-400 text-white placeholder-gray-300 focus:ring-2 focus:ring-white"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  autoComplete="family-name"
+                />
+              </div>
+
+              <input
+                type="email"
+                placeholder="Email address"
+                required
+                className="w-full p-3 rounded-md bg-black/20 border border-gray-400 text-white placeholder-gray-300 focus:ring-2 focus:ring-white"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+              />
+
+              <input
+                type="password"
+                placeholder="Password (min. 6 characters)"
+                required
+                minLength={6}
+                className="w-full p-3 rounded-md bg-black/20 border border-gray-400 text-white placeholder-gray-300 focus:ring-2 focus:ring-white"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+
+              <input
+                type="password"
+                placeholder="Confirm Password"
+                required
+                className="w-full p-3 rounded-md bg-black/20 border border-gray-400 text-white placeholder-gray-300 focus:ring-2 focus:ring-white"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-white text-black py-3 rounded-md font-semibold hover:bg-gray-200 transition disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {loading ? "Creating Account..." : "Create Account"}
+              </button>
+            </form>
+          </>
         )}
-
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 gap-3">
-            <input
-              type="text"
-              placeholder="First Name"
-              required
-              className="p-3 rounded-md bg-black/20 border border-gray-400 text-white placeholder-gray-300 focus:ring-2 focus:ring-white"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Last Name"
-              required
-              className="p-3 rounded-md bg-black/20 border border-gray-400 text-white placeholder-gray-300 focus:ring-2 focus:ring-white"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-            />
-          </div>
-
-          <input
-            type="email"
-            placeholder="Email address"
-            required
-            className="w-full p-3 rounded-md bg-black/20 border border-gray-400 text-white placeholder-gray-300 focus:ring-2 focus:ring-white"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-
-          <input
-            type="password"
-            placeholder="Password (min. 6 characters)"
-            required
-            minLength={6}
-            className="w-full p-3 rounded-md bg-black/20 border border-gray-400 text-white placeholder-gray-300 focus:ring-2 focus:ring-white"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            required
-            className="w-full p-3 rounded-md bg-black/20 border border-gray-400 text-white placeholder-gray-300 focus:ring-2 focus:ring-white"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-white text-black py-3 rounded-md font-semibold hover:bg-gray-200 transition disabled:opacity-70"
-          >
-            {loading ? "Creating Account..." : "Create Account"}
-          </button>
-        </form>
       </motion.div>
     </div>
   );

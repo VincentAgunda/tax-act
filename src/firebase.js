@@ -3,18 +3,23 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
+// Load from Vite env
 const firebaseConfig = {
-  apiKey: "AIzaSyB5IRcxReqqADGTeLkRA-zKM2qUBK3FEC4",
-  authDomain: "taxact-78897.firebaseapp.com",
-  projectId: "taxact-78897",
-  storageBucket: "taxact-78897.firebasestorage.app",
-  messagingSenderId: "856289654300",
-  appId: "1:856289654300:web:80e0985f72bb96753251d9",
-  measurementId: "G-LETFHGS4NM"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+// Export services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
 export default app;

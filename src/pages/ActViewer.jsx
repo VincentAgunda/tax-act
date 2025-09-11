@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { getAct } from '../utils/firebaseUtils';
-import { useAuth } from '../context/AuthContext';
-
-
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { supabase } from "../supabaseClient";
+import { useAuth } from "../context/AuthContext";
 
 const ActViewer = () => {
   const { id } = useParams();
@@ -14,10 +12,16 @@ const ActViewer = () => {
   useEffect(() => {
     const fetchAct = async () => {
       try {
-        const actData = await getAct(id);
-        setAct(actData);
+        const { data, error } = await supabase
+          .from("acts") // 👈 make sure your table is named "acts"
+          .select("*")
+          .eq("id", id)
+          .single();
+
+        if (error) throw error;
+        setAct(data);
       } catch (error) {
-        console.error('Error fetching act:', error);
+        console.error("Error fetching act:", error.message);
       } finally {
         setLoading(false);
       }
@@ -28,13 +32,16 @@ const ActViewer = () => {
 
   const handleDownload = () => {
     if (!currentUser) {
-      alert('You must be logged in to download acts.');
+      alert("You must be logged in to download acts.");
       return;
     }
 
-    // Implement download logic here
-    // This could be a download link or a function to generate a PDF
-    alert('Download functionality would be implemented here.');
+    // Example: download act content as a text file
+    const blob = new Blob([act.content], { type: "text/html" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${act.title}.html`;
+    link.click();
   };
 
   if (loading) {
@@ -48,6 +55,7 @@ const ActViewer = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-4">{act.title}</h1>
+
       <div className="mb-4">
         <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded text-sm">
           Version: {act.version}
@@ -57,11 +65,14 @@ const ActViewer = () => {
         </span>
       </div>
 
-      <div className="prose max-w-none mb-8" dangerouslySetInnerHTML={{ __html: act.content }} />
+      <div
+        className="prose max-w-none mb-8"
+        dangerouslySetInnerHTML={{ __html: act.content }}
+      />
 
       <div className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">Version History</h2>
-        {/* Here you would map through the version history */}
+        {/* TODO: Fetch & map version history from Supabase */}
         <p>Version history would be displayed here.</p>
       </div>
 

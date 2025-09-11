@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
+import { supabase } from "../supabaseClient"; // Make sure this path is correct
 import { useAuth } from "../context/AuthContext";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
 const fadeIn = {
@@ -18,42 +17,48 @@ const Login = () => {
 
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
-    // redirect if logged in, but NOT when on /login
-    if (currentUser && location.pathname !== "/login") {
+    if (currentUser) {
       navigate("/");
     }
-  }, [currentUser, navigate, location]);
+  }, [currentUser, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(""); // Reset error on new submission
 
     try {
-      setError("");
       setLoading(true);
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      await signInWithEmailAndPassword(auth, email, password);
-
+      if (signInError) {
+        throw signInError;
+      }
+      
+      // On successful login, the AuthContext listener will handle the redirect
       navigate("/");
-    } catch (error) {
-      setError("Failed to sign in: " + error.message);
-    }
 
-    setLoading(false);
+    } catch (error) {
+      console.error("Login error:", error.message);
+      // This will now correctly display "Email not confirmed" or "Invalid login credentials"
+      setError(error.message || "Failed to sign in. Please check your credentials.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black relative">
-      {/* Background Overlay */}
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url(/hero-1.png)" }}
       />
       <div className="absolute inset-0 bg-black/60" />
 
-      {/* Login Card */}
       <motion.div
         initial="hidden"
         animate="visible"
@@ -87,6 +92,7 @@ const Login = () => {
             className="w-full p-3 rounded-md bg-black/20 border border-gray-400 text-white placeholder-gray-300 focus:ring-2 focus:ring-white"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
           />
 
           <input
@@ -96,12 +102,13 @@ const Login = () => {
             className="w-full p-3 rounded-md bg-black/20 border border-gray-400 text-white placeholder-gray-300 focus:ring-2 focus:ring-white"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
           />
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-white text-black py-3 rounded-md font-semibold hover:bg-gray-200 transition"
+            className="w-full bg-white text-black py-3 rounded-md font-semibold hover:bg-gray-200 transition disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getAllNews } from "../utils/firebaseUtils";
+import { supabase } from "../supabaseClient";
 import NewsCard from "../components/NewsCard";
 import SearchFilter from "../components/SearchFilter";
 import { motion } from "framer-motion";
@@ -23,17 +23,20 @@ const NewsFeed = () => {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const newsData = await getAllNews();
+        const { data, error } = await supabase.from("news").select("*");
+        if (error) throw error;
+
         // Add default values for status and version if missing
-        const processedNews = newsData.map(item => ({
+        const processedNews = data.map((item) => ({
           ...item,
           status: item.status || "Published",
-          version: item.version || "1.0.0"
+          version: item.version || "1.0.0",
         }));
+
         setNews(processedNews);
         setFilteredNews(processedNews);
       } catch (error) {
-        console.error("Error fetching news:", error);
+        console.error("Error fetching news:", error.message);
       }
     };
 
@@ -153,11 +156,12 @@ const NewsFeed = () => {
                   <button
                     key={number}
                     onClick={() => paginate(number)}
-                    className={`mx-1 px-4 py-2 rounded-md font-medium transition ${
-                      currentPage === number
+                    className={
+                      "mx-1 px-4 py-2 rounded-md font-medium transition " +
+                      (currentPage === number
                         ? "bg-[#34353A] text-white"
-                        : "bg-[#E5E5E5] text-black hover:bg-[#D1D1D1]"
-                    }`}
+                        : "bg-[#E5E5E5] text-black hover:bg-[#D1D1D1]")
+                    }
                   >
                     {number}
                   </button>
