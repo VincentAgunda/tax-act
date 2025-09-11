@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'; 
+import { supabase } from '../supabaseClient';
 import React, { useState, useEffect } from "react"; 
 import RichTextEditor from "../components/RichTextEditor"; 
 import { motion } from "framer-motion"; 
@@ -14,11 +14,6 @@ import AddIcon from "@mui/icons-material/Add";
 import Alert from "@mui/material/Alert"; 
 import CircularProgress from "@mui/material/CircularProgress"; 
 import VisibilityIcon from '@mui/icons-material/Visibility';
-
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 // --- Reusable Components & Animations ---
 
