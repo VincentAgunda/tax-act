@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../supabaseClient"; // Make sure this path is correct
+import { supabase } from "../supabaseClient";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
 const fadeIn = {
@@ -17,16 +17,22 @@ const Login = () => {
 
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
+  // Get redirect URL from query string (if exists)
+  const params = new URLSearchParams(location.search);
+  const redirectTo = params.get("redirect") || "/admin";
+
+  // Redirect if already logged in
   useEffect(() => {
     if (currentUser) {
-      navigate("/");
+      navigate(redirectTo, { replace: true });
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, navigate, redirectTo]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // Reset error on new submission
+    setError("");
 
     try {
       setLoading(true);
@@ -35,16 +41,11 @@ const Login = () => {
         password,
       });
 
-      if (signInError) {
-        throw signInError;
-      }
-      
-      // On successful login, the AuthContext listener will handle the redirect
-      navigate("/");
+      if (signInError) throw signInError;
 
+      navigate(redirectTo, { replace: true }); // Redirect where they came from
     } catch (error) {
       console.error("Login error:", error.message);
-      // This will now correctly display "Email not confirmed" or "Invalid login credentials"
       setError(error.message || "Failed to sign in. Please check your credentials.");
     } finally {
       setLoading(false);
