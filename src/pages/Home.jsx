@@ -47,7 +47,7 @@ const heroSlides = [
     title: "Stay Informed",
     desc: "Get the latest updates about tax laws and policies.",
     btn1: { text: "See News", to: "/news" },
-    btn2: { text: "Contact Us", to: "/contact" },
+    btn2: { text: "Contact Us", to: "#contact" }, // will scroll
   },
 ];
 
@@ -77,7 +77,7 @@ const exploreCards = [
     title: "Insights",
     desc: "Deep analysis of legislative changes and impacts.",
     img: "/hero-5.jpg",
-    to: "/insights",
+    to: "/acts", // changed from /insights
     bgColor: "#eeedf2", // Soft Blue-Tinted Gray
   },
 ];
@@ -85,6 +85,7 @@ const exploreCards = [
 const Home = () => {
   const [current, setCurrent] = useState(0);
   const form = useRef();
+  const contactRef = useRef(null);
 
   // Hero auto-slide
   useEffect(() => {
@@ -109,6 +110,13 @@ const Home = () => {
         form.current.reset();
       })
       .catch(() => alert("Failed to send message. Please try again."));
+  };
+
+  // Smooth scroll handler
+  const scrollToContact = () => {
+    if (contactRef.current) {
+      contactRef.current.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   return (
@@ -157,12 +165,22 @@ const Home = () => {
               >
                 {heroSlides[current].btn1.text}
               </Link>
-              <Link
-                to={heroSlides[current].btn2.to}
-                className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-md font-semibold hover:bg-white/30 transition text-center shadow-md"
-              >
-                {heroSlides[current].btn2.text}
-              </Link>
+
+              {heroSlides[current].btn2.to === "#contact" ? (
+                <button
+                  onClick={scrollToContact}
+                  className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-md font-semibold hover:bg-white/30 transition text-center shadow-md"
+                >
+                  {heroSlides[current].btn2.text}
+                </button>
+              ) : (
+                <Link
+                  to={heroSlides[current].btn2.to}
+                  className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-md font-semibold hover:bg-white/30 transition text-center shadow-md"
+                >
+                  {heroSlides[current].btn2.text}
+                </Link>
+              )}
             </div>
           </div>
         </motion.div>
@@ -283,15 +301,16 @@ const Home = () => {
                   className="h-80 rounded-3xl overflow-hidden shadow-sm group relative flex flex-col"
                   style={{ backgroundColor: card.bgColor }}
                 >
-                  {/* Text Section */}
-                  <div className="p-5 flex-grow flex flex-col">
-                    <span className="text-xs font-medium text-gray-600">
-                      {card.title}
-                    </span>
-                    <h3 className="text-base md:text-lg font-medium text-gray-900 leading-snug mt-1">
-                      {card.desc}
-                    </h3>
-                  </div>
+  {/* Text Section */}
+<div className="p-5 flex-grow flex flex-col">
+  <span className="text-xs font-medium text-gray-600">
+    {card.title}
+  </span>
+  <h3 className="text-base lg:text-sm font-medium text-gray-900 leading-snug mt-1">
+    {card.desc}
+  </h3>
+</div>
+
 
                   {/* Image fills bottom half */}
                   <div
@@ -322,7 +341,11 @@ const Home = () => {
       </section>
 
       {/* --- Contact Section --- */}
-      <section className="py-16 text-center bg-[#fdfdfd]">
+      <section
+        ref={contactRef}
+        className="py-16 text-center bg-[#fdfdfd]"
+        id="contact"
+      >
         <motion.div
           initial="hidden"
           whileInView="visible"
