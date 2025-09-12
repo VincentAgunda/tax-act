@@ -251,76 +251,75 @@ const Home = () => {
         </section>
       ))}
 
-     {/* --- Explore More Section (Apple Style with Full Bottom Image, Smaller Fonts) --- */}
-<section className="py-16 bg-[#fdfdfd]">
-  <div className="container mx-auto px-6">
-    <motion.div
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true }}
-      variants={fadeIn}
-      className="text-center mb-12"
-    >
-      <h2 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-3">
-        Explore More
-      </h2>
-      <p className="text-gray-600 max-w-xl mx-auto text-sm md:text-base">
-        Discover our comprehensive tax resources and tools
-      </p>
-    </motion.div>
-
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {exploreCards.map((card, i) => (
-        <motion.div
-          key={i}
-          initial="rest"
-          whileHover="hover"
-          whileTap="tap"
-          variants={bounceAnimation}
-          className="relative"
-        >
-          <div
-            className="h-80 rounded-3xl overflow-hidden shadow-sm group relative flex flex-col"
-            style={{ backgroundColor: card.bgColor }}
+      {/* --- Explore More Section --- */}
+      <section className="py-16 bg-[#fdfdfd]">
+        <div className="container mx-auto px-6">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeIn}
+            className="text-center mb-12"
           >
-            {/* Text Section */}
-            <div className="p-5 flex-grow flex flex-col">
-              <span className="text-xs md:text-sm font-medium text-gray-600">
-                {card.title}
-              </span>
-              <h3 className="text-lg md:text-xl font-medium text-gray-900 leading-snug mt-1">
-                {card.desc}
-              </h3>
-            </div>
+            <h2 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-3">
+              Explore More
+            </h2>
+            <p className="text-gray-600 max-w-xl mx-auto text-sm md:text-base">
+              Discover our comprehensive tax resources and tools
+            </p>
+          </motion.div>
 
-            {/* Image fills bottom half */}
-            <div
-              className="w-full h-1/2 bg-cover bg-bottom"
-              style={{ backgroundImage: `url(${card.img})` }}
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {exploreCards.map((card, i) => (
+              <motion.div
+                key={i}
+                initial="rest"
+                whileHover="hover"
+                whileTap="tap"
+                variants={bounceAnimation}
+                className="relative"
+              >
+                <div
+                  className="h-80 rounded-3xl overflow-hidden shadow-sm group relative flex flex-col"
+                  style={{ backgroundColor: card.bgColor }}
+                >
+                  {/* Text Section */}
+                  <div className="p-5 flex-grow flex flex-col">
+                    <span className="text-xs font-medium text-gray-600">
+                      {card.title}
+                    </span>
+                    <h3 className="text-base md:text-lg font-medium text-gray-900 leading-snug mt-1">
+                      {card.desc}
+                    </h3>
+                  </div>
 
-            {/* Floating + Button */}
-            <motion.div
-              whileHover={{ rotate: 90 }}
-              transition={{ type: "spring", stiffness: 300, damping: 15 }}
-              className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-black flex items-center justify-center shadow-md cursor-pointer"
-            >
-              <AddIcon className="text-white text-sm" />
-            </motion.div>
+                  {/* Image fills bottom half */}
+                  <div
+                    className="w-full h-1/2 bg-cover bg-bottom"
+                    style={{ backgroundImage: `url(${card.img})` }}
+                  />
+
+                  {/* Floating + Button */}
+                  <motion.div
+                    whileHover={{ rotate: 90 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                    className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-black flex items-center justify-center shadow-md cursor-pointer"
+                  >
+                    <AddIcon className="text-white text-sm" />
+                  </motion.div>
+                </div>
+
+                {/* Overlay Link */}
+                <Link
+                  to={card.to}
+                  className="absolute inset-0 z-10"
+                  aria-label={`Explore ${card.title}`}
+                />
+              </motion.div>
+            ))}
           </div>
-
-          {/* Overlay Link */}
-          <Link
-            to={card.to}
-            className="absolute inset-0 z-10"
-            aria-label={`Explore ${card.title}`}
-          />
-        </motion.div>
-      ))}
-    </div>
-  </div>
-</section>
-
+        </div>
+      </section>
 
       {/* --- Contact Section --- */}
       <section className="py-16 text-center bg-[#fdfdfd]">
