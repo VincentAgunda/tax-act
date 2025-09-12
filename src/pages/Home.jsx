@@ -64,14 +64,14 @@ const exploreCards = [
     desc: "Spot changes between different versions quickly.",
     img: "/hero-4.jpg",
     to: "/compare",
-    bgColor: "#f8f8f9", // Light Gray Tint
+    bgColor: "#eff6fb", // Light Gray Tint
   },
   {
     title: "Tax News",
     desc: "Stay up to date with tax-related policies.",
     img: "/hero-6.jpg",
     to: "/news",
-    bgColor: "#fdfdfd", // Almost White
+    bgColor: "#f5f5f7", // Almost White
   },
   {
     title: "Insights",
@@ -251,73 +251,76 @@ const Home = () => {
         </section>
       ))}
 
-      {/* --- Explore More Section --- */}
-      <section className="py-16 bg-[#fdfdfd]">
-        <div className="container mx-auto px-6">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeIn}
-            className="text-center mb-12"
+     {/* --- Explore More Section (Apple Style with Full Bottom Image, Smaller Fonts) --- */}
+<section className="py-16 bg-[#fdfdfd]">
+  <div className="container mx-auto px-6">
+    <motion.div
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      variants={fadeIn}
+      className="text-center mb-12"
+    >
+      <h2 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-3">
+        Explore More
+      </h2>
+      <p className="text-gray-600 max-w-xl mx-auto text-sm md:text-base">
+        Discover our comprehensive tax resources and tools
+      </p>
+    </motion.div>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {exploreCards.map((card, i) => (
+        <motion.div
+          key={i}
+          initial="rest"
+          whileHover="hover"
+          whileTap="tap"
+          variants={bounceAnimation}
+          className="relative"
+        >
+          <div
+            className="h-80 rounded-3xl overflow-hidden shadow-sm group relative flex flex-col"
+            style={{ backgroundColor: card.bgColor }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Explore More
-            </h2>
-            <p className="text-gray-600 max-w-xl mx-auto">
-              Discover our comprehensive tax resources and tools
-            </p>
-          </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {exploreCards.map((card, i) => (
-              <motion.div
-                key={i}
-                initial="rest"
-                whileHover="hover"
-                whileTap="tap"
-                variants={bounceAnimation}
-                className="relative"
-              >
-                <div
-                  className="h-80 rounded-2xl overflow-hidden shadow-lg group relative flex flex-col justify-between"
-                  style={{ backgroundColor: card.bgColor }}
-                >
-                  <div className="p-5 flex-grow">
-                    <h3 className="text-xl font-bold mb-2 text-gray-900">
-                      {card.title}
-                    </h3>
-                    <p className="text-gray-700 text-sm leading-relaxed">
-                      {card.desc}
-                    </p>
-                  </div>
+            {/* Text Section */}
+            <div className="p-5 flex-grow flex flex-col">
+              <span className="text-xs md:text-sm font-medium text-gray-600">
+                {card.title}
+              </span>
+              <h3 className="text-lg md:text-xl font-medium text-gray-900 leading-snug mt-1">
+                {card.desc}
+              </h3>
+            </div>
 
-                  <div
-                    className="w-full h-32 bg-cover bg-center"
-                    style={{ backgroundImage: `url(${card.img})` }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-t from-white/30 to-transparent" />
-                  </div>
+            {/* Image fills bottom half */}
+            <div
+              className="w-full h-1/2 bg-cover bg-bottom"
+              style={{ backgroundImage: `url(${card.img})` }}
+            />
 
-                  {/* + button stays circular */}
-                  <motion.div
-                    whileHover={{ rotate: 90 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                    className="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-black flex items-center justify-center shadow-lg cursor-pointer"
-                  >
-                    <AddIcon className="text-white text-lg" />
-                  </motion.div>
-                </div>
-
-                <Link
-                  to={card.to}
-                  className="absolute inset-0 z-10"
-                  aria-label={`Explore ${card.title}`}
-                />
-              </motion.div>
-            ))}
+            {/* Floating + Button */}
+            <motion.div
+              whileHover={{ rotate: 90 }}
+              transition={{ type: "spring", stiffness: 300, damping: 15 }}
+              className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-black flex items-center justify-center shadow-md cursor-pointer"
+            >
+              <AddIcon className="text-white text-sm" />
+            </motion.div>
           </div>
-        </div>
-      </section>
+
+          {/* Overlay Link */}
+          <Link
+            to={card.to}
+            className="absolute inset-0 z-10"
+            aria-label={`Explore ${card.title}`}
+          />
+        </motion.div>
+      ))}
+    </div>
+  </div>
+</section>
+
 
       {/* --- Contact Section --- */}
       <section className="py-16 text-center bg-[#fdfdfd]">
