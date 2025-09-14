@@ -213,20 +213,21 @@ const ComparisonTable = memo(({ comparison }) => {
       <h3 className="text-xl font-semibold mb-4 text-black">{isTextComparison ? "Content Differences" : "Metadata Differences"}</h3>
       <p className="text-gray-600 mb-6">Found {comparison.differences.length} differences between the documents.</p>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-[#cacfd8]">
+        {/* 🎨 UPDATED TABLE STYLES */}
+        <table className="min-w-full border border-black divide-y divide-black">
           <thead className="bg-[#d6d8e0]">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{isTextComparison ? "Line" : "Field"}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">First Document</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-black">{isTextComparison ? "Line" : "Field"}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-black">First Document</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Second Document</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-[#cacfd8]">
+          <tbody className="bg-white divide-y divide-black">
             {diffsToShow.map((diff, idx) => (
-              <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-[#f4f3ef]"}>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">{isTextComparison ? diff.line : diff.field}</td>
-                <td className="px-6 py-4 text-sm text-gray-900 bg-red-100">{diff.left}</td>
-                <td className="px-6 py-4 text-sm text-gray-900 bg-green-100">{diff.right}</td>
+              <tr key={idx}>
+                <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-black">{isTextComparison ? diff.line : diff.field}</td>
+                <td className="px-6 py-4 text-sm text-gray-900 bg-[#ebf0f6] border-r border-black">{diff.left}</td>
+                <td className="px-6 py-4 text-sm text-gray-900 bg-[#f4f3ef]">{diff.right}</td>
               </tr>
             ))}
           </tbody>
