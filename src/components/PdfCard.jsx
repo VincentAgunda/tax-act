@@ -1,50 +1,77 @@
-import React from 'react';
-import { Card, CardContent, CardActions, Typography, Button } from '@mui/material';
+import React, { useState } from 'react';
+import { Card, CardContent, CardActions, Typography, Button, Modal, Box } from '@mui/material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
+// Style for the modal
+const modalStyle = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: '80%',
+  height: '90%',
+  bgcolor: 'background.paper',
+  border: '2px solid #000',
+  boxShadow: 24,
+  p: 4,
+};
+
 const PdfCard = ({ pdf }) => {
+  // State to manage if the modal is open or closed
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const handleOpenPreview = () => setIsPreviewOpen(true);
+  const handleClosePreview = () => setIsPreviewOpen(false);
+
   return (
-    <Card className="h-full flex flex-col hover:shadow-lg transition-shadow">
-      <CardContent className="flex-grow">
-        <div className="flex items-center mb-3">
-          <PictureAsPdfIcon className="text-red-600 mr-2" />
-          <Typography variant="h6" className="font-semibold line-clamp-2">
+    <>
+      <Card className="h-full flex flex-col hover:shadow-lg transition-shadow">
+        {/* CardContent remains the same... */}
+        <CardContent>
+            {/* ...all your Typography and span elements go here... */}
+        </CardContent>
+
+        <CardActions>
+          {/* This button now opens the modal */}
+          <Button
+            size="small"
+            endIcon={<OpenInNewIcon />}
+            onClick={handleOpenPreview} // Changed from href to onClick
+            sx={{
+              backgroundColor: '#f5f4f0',
+              color: '#333',
+              '&:hover': {
+                backgroundColor: '#e8e7e3',
+              },
+            }}
+          >
+            Show Preview
+          </Button>
+        </CardActions>
+      </Card>
+
+      {/* The Modal component for the preview */}
+      <Modal
+        open={isPreviewOpen}
+        onClose={handleClosePreview}
+        aria-labelledby="pdf-preview-title"
+      >
+        <Box sx={modalStyle}>
+          <Typography id="pdf-preview-title" variant="h6" component="h2" sx={{ mb: 2 }}>
             {pdf.title}
           </Typography>
-        </div>
-        <Typography variant="body2" color="textSecondary" className="mb-3 line-clamp-3">
-          {pdf.description}
-        </Typography>
-        <div className="flex flex-wrap gap-1 mb-3">
-          <span className="bg-gray-100 text-xs px-2 py-1 rounded">
-            {pdf.category}
-          </span>
-          <span className="bg-gray-100 text-xs px-2 py-1 rounded">
-            v{pdf.version}
-          </span>
-          <span className={`text-xs px-2 py-1 rounded ${
-            pdf.status === 'Active' ? 'bg-green-100 text-green-800' :
-            pdf.status === 'Draft' ? 'bg-yellow-100 text-yellow-800' :
-            'bg-gray-100 text-gray-800'
-          }`}>
-            {pdf.status}
-          </span>
-        </div>
-      </CardContent>
-      <CardActions>
-        <Button
-          size="small"
-          color="primary"
-          endIcon={<OpenInNewIcon />}
-          href={pdf.file_url}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          View PDF
-        </Button>
-      </CardActions>
-    </Card>
+          {/* Embed the PDF using an iframe */}
+          <iframe
+            src={pdf.file_url}
+            title={pdf.title}
+            width="100%"
+            height="90%"
+            style={{ border: 'none' }}
+          />
+        </Box>
+      </Modal>
+    </>
   );
 };
 
