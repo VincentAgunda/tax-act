@@ -234,7 +234,7 @@ const Home = () => {
           btn: "View Acts",
           icon: <MenuBookIcon fontSize="large" className="mb-4 text-black" />,
           overlay: "bg-black/20",
-          textColor: "oklch(37.2% 0.044 257.287)",
+          textColor: "black",
         },
         {
           title: "Compare Versions",
@@ -256,7 +256,7 @@ const Home = () => {
           btn: "See News",
           icon: <NewspaperIcon fontSize="large" className="mb-4 text-white" />,
           overlay: "bg-black/40",
-          textColor: "oklch(37.2% 0.044 257.287)",
+          textColor: "black",
         },
       ].map((section, i) => (
         <section
