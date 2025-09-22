@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link as ScrollLink } from 'react-scroll';
 import { useAuth } from "../context/AuthContext";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance"; // New Logo ✅
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 
 const Header = () => {
   const { currentUser, logout } = useAuth();
@@ -44,11 +45,11 @@ const Header = () => {
   }, [location.pathname]);
 
   const navLinks = [
-    { path: "/", label: "Home" },
-    { path: "/acts", label: "Acts Explorer" },
-    { path: "/compare", label: "Compare Acts" },
-    { path: "/news", label: "News Feed" },
-    ...(currentUser ? [{ path: "/admin", label: "Admin Dashboard" }] : []),
+    { path: "/", label: "Home", type: "link" },
+    { path: "acts", label: "Acts Explorer", type: "scroll" },
+    { path: "compare", label: "Compare Acts", type: "scroll" },
+    { path: "/news", label: "News Feed", type: "link" },
+    ...(currentUser ? [{ path: "/admin", label: "Admin Dashboard", type: "link" }] : []),
   ];
 
   return (
@@ -142,17 +143,34 @@ const Header = () => {
           </div>
           <nav className="flex flex-col p-4 space-y-2">
             {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`px-3 py-2 rounded-md text-base ${
-                  isActive(link.path)
-                    ? "font-bold bg-gray-100 text-black"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {link.label}
-              </Link>
+              link.type === "scroll" ? (
+                <ScrollLink
+                  key={link.path}
+                  to={link.path}
+                  smooth={true}
+                  duration={500}
+                  onClick={closeMenus}
+                  className={`px-3 py-2 rounded-md text-base cursor-pointer ${
+                    isActive(link.path)
+                      ? "font-bold bg-gray-100 text-black"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {link.label}
+                </ScrollLink>
+              ) : (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`px-3 py-2 rounded-md text-base ${
+                    isActive(link.path)
+                      ? "font-bold bg-gray-100 text-black"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              )
             ))}
           </nav>
         </div>

@@ -74,7 +74,7 @@ const PdfCard = ({ pdf }) => {
   );
 };
 
-const ActsExplorer = () => {
+const ActsExplorer = ({ embedded = false }) => {
   const [acts, setActs] = useState([]);
   const [pdfs, setPdfs] = useState([]);
   const [filteredActs, setFilteredActs] = useState([]);
@@ -162,34 +162,36 @@ const ActsExplorer = () => {
 
   return (
     <div className="bg-[#f5f5f7] text-black min-h-screen">
-      {/* Hero Section */}
-      <section
-        className="relative h-[45vh] flex flex-col items-center justify-center text-center overflow-hidden"
-        style={{
-          backgroundImage: `url(/acts-bg.jpg)`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeIn}
-          className="relative z-10 px-4"
+      {/* Hero Section - Conditionally render */}
+      {!embedded && (
+        <section
+          className="relative h-[45vh] flex flex-col items-center justify-center text-center overflow-hidden"
+          style={{
+            backgroundImage: `url(/acts-bg.jpg)`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
         >
-          <MenuBookIcon fontSize="large" className="mb-4 text-white" />
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white drop-shadow-md">
-            Documents Explorer
-          </h1>
-          <p className="text-lg text-gray-200 max-w-2xl mx-auto">
-            Browse, filter, and search through all tax documents with ease.
-          </p>
-        </motion.div>
-      </section>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={fadeIn}
+            className="relative z-10 px-4"
+          >
+            <MenuBookIcon fontSize="large" className="mb-4 text-white" />
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white drop-shadow-md">
+              Documents Explorer
+            </h1>
+            <p className="text-lg text-gray-200 max-w-2xl mx-auto">
+              Browse, filter, and search through all tax documents with ease.
+            </p>
+          </motion.div>
+        </section>
+      )}
 
       {/* Explorer Section */}
-      <section className="bg-[#fdfdfd] text-black py-12">
+      <section className={`${embedded ? "pt-0" : "pt-12"} bg-[#fdfdfd] text-black pb-12`}>
         <div className="container mx-auto px-6">
           {/* Toggle Buttons */}
           <div className="flex justify-center mb-6">

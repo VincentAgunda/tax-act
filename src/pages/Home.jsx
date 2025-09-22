@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import emailjs from "@emailjs/browser";
+import ActsExplorer from "./ActsExplorer";
+import CompareActs from "./CompareActs";
 
-// Material UI Icons
+// Material UI Icons (Corrected Paths)
 import FacebookIcon from "@mui/icons-material/Facebook";
 import TwitterIcon from "@mui/icons-material/Twitter";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
@@ -32,22 +34,22 @@ const heroSlides = [
     img: "/hero-5.jpg",
     title: "Navigate Tax Acts",
     desc: "Your complete resource for tax legislation and news.",
-    btn1: { text: "Explore Acts", to: "/acts" },
+    btn1: { text: "Explore Acts", to: "#acts" },
     btn2: { text: "Latest News", to: "/news" },
   },
   {
     img: "/hero-6.jpg",
     title: "Compare Versions",
     desc: "Track legislative changes across different versions.",
-    btn1: { text: "Compare Now", to: "/compare" },
-    btn2: { text: "Learn More", to: "/about" },
+    btn1: { text: "Compare Now", to: "#compare" },
+    btn2: { text: "Learn More", to: "#about" },
   },
   {
     img: "/hero-5.jpg",
     title: "Stay Informed",
     desc: "Get the latest updates about tax laws and policies.",
     btn1: { text: "See News", to: "/news" },
-    btn2: { text: "Contact Us", to: "#contact" }, // will scroll
+    btn2: { text: "Contact Us", to: "#contact" },
   },
 ];
 
@@ -56,29 +58,29 @@ const exploreCards = [
     title: "Acts Library",
     desc: "Search and access every act in one place.",
     img: "/hero-5.jpg",
-    to: "/acts",
-    bgColor: "#f5f5f7", // Apple Off-White
+    to: "#acts",
+    bgColor: "#f5f5f7",
   },
   {
     title: "Compare Tools",
     desc: "Spot changes between different versions quickly.",
     img: "/hero-4.jpg",
-    to: "/compare",
-    bgColor: "#eff6fb", // Light Gray Tint
+    to: "#compare",
+    bgColor: "#eff6fb",
   },
   {
     title: "Tax News",
     desc: "Stay up to date with tax-related policies.",
     img: "/hero-6.jpg",
     to: "/news",
-    bgColor: "#f5f5f7", // Almost White
+    bgColor: "#f5f5f7",
   },
   {
     title: "Insights",
     desc: "Deep analysis of legislative changes and impacts.",
     img: "/hero-5.jpg",
-    to: "/acts", // changed from /insights
-    bgColor: "#eeedf2", // Soft Blue-Tinted Gray
+    to: "#acts",
+    bgColor: "#eeedf2",
   },
 ];
 
@@ -86,6 +88,8 @@ const Home = () => {
   const [current, setCurrent] = useState(0);
   const form = useRef();
   const contactRef = useRef(null);
+  const actsRef = useRef(null);
+  const compareRef = useRef(null);
 
   // Hero auto-slide
   useEffect(() => {
@@ -112,15 +116,19 @@ const Home = () => {
       .catch(() => alert("Failed to send message. Please try again."));
   };
 
-  // Smooth scroll handler
-  const scrollToContact = () => {
-    if (contactRef.current) {
-      contactRef.current.scrollIntoView({ behavior: "smooth" });
+  // Smooth scroll handlers
+  const scrollToSection = (ref) => {
+    if (ref && ref.current) {
+      ref.current.scrollIntoView({ behavior: "smooth" });
     }
   };
 
+  const scrollToContact = () => scrollToSection(contactRef);
+  const scrollToActs = () => scrollToSection(actsRef);
+  const scrollToCompare = () => scrollToSection(compareRef);
+
   return (
-    <div className="bg-black text-white">
+    <div className="bg-white text-gray-900">
       {/* --- Hero Carousel --- */}
       <section className="relative w-full h-[75vh] min-h-[500px] overflow-hidden">
         {heroSlides.map((slide, i) => (
@@ -149,7 +157,7 @@ const Home = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.3 }}
-          className="relative z-10 flex flex-col items-center justify-center h-full p-6 text-center"
+          className="relative z-10 flex flex-col items-center justify-center h-full p-6 text-center text-white"
         >
           <div className="max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight drop-shadow-md">
@@ -159,16 +167,32 @@ const Home = () => {
               {heroSlides[current].desc}
             </p>
             <div className="flex flex-row items-center justify-center gap-4 flex-wrap">
-              <Link
-                to={heroSlides[current].btn1.to}
-                className="bg-white text-black px-6 py-3 rounded-md font-semibold hover:bg-gray-200 transition text-center shadow-md"
-              >
-                {heroSlides[current].btn1.text}
-              </Link>
-
-              {heroSlides[current].btn2.to === "#contact" ? (
+              {heroSlides[current].btn1.to.startsWith("#") ? (
                 <button
-                  onClick={scrollToContact}
+                  onClick={() => {
+                    if (heroSlides[current].btn1.to === "#acts") scrollToActs();
+                    else if (heroSlides[current].btn1.to === "#compare")
+                      scrollToCompare();
+                  }}
+                  className="bg-white text-black px-6 py-3 rounded-md font-semibold hover:bg-gray-200 transition text-center shadow-md"
+                >
+                  {heroSlides[current].btn1.text}
+                </button>
+              ) : (
+                <Link
+                  to={heroSlides[current].btn1.to}
+                  className="bg-white text-black px-6 py-3 rounded-md font-semibold hover:bg-gray-200 transition text-center shadow-md"
+                >
+                  {heroSlides[current].btn1.text}
+                </Link>
+              )}
+
+              {heroSlides[current].btn2.to.startsWith("#") ? (
+                <button
+                  onClick={() => {
+                    if (heroSlides[current].btn2.to === "#contact")
+                      scrollToContact();
+                  }}
                   className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-md font-semibold hover:bg-white/30 transition text-center shadow-md"
                 >
                   {heroSlides[current].btn2.text}
@@ -205,39 +229,39 @@ const Home = () => {
         {
           title: "Browse Legislation",
           desc: "Access a complete database of tax acts with version history and detailed insights.",
-          to: "/acts",
+          action: scrollToActs,
           bg: "#DDDDDD",
           btn: "View Acts",
           icon: <MenuBookIcon fontSize="large" className="mb-4 text-black" />,
           overlay: "bg-black/20",
-          textColor: "text-black",
+          textColor: "oklch(37.2% 0.044 257.287)",
         },
         {
           title: "Compare Versions",
           desc: "Easily track legislative changes across different versions.",
-          to: "/compare",
+          action: scrollToCompare,
           bg: "#AAAAAA",
           btn: "Compare Now",
           icon: (
             <CompareArrowsIcon fontSize="large" className="mb-4 text-black" />
           ),
           overlay: "bg-black/10",
-          textColor: "text-black",
+          textColor: "oklch(37.2% 0.044 257.287)",
         },
         {
           title: "Stay Informed",
           desc: "Get the latest news and updates about tax laws and policy changes.",
           to: "/news",
-          bg: "/news-bg.jpg",
+          bg: "#DDDDDD",
           btn: "See News",
           icon: <NewspaperIcon fontSize="large" className="mb-4 text-white" />,
-          overlay: "bg-white/20",
-          textColor: "text-white",
+          overlay: "bg-black/40",
+          textColor: "oklch(37.2% 0.044 257.287)",
         },
       ].map((section, i) => (
         <section
           key={i}
-          className="relative min-h-[60vh] flex flex-col items-center justify-center text-center py-16"
+          className="relative min-h-[50vh] flex flex-col items-center justify-center text-center py-12"
           style={{
             background: section.bg.startsWith("#")
               ? section.bg
@@ -259,25 +283,34 @@ const Home = () => {
               {section.title}
             </h2>
             <p className="text-lg mb-8 max-w-2xl mx-auto">{section.desc}</p>
-            <Link
-              to={section.to}
-              className="bg-white text-black px-8 py-3 rounded-md font-semibold hover:bg-gray-200 transition"
-            >
-              {section.btn}
-            </Link>
+            {section.action ? (
+              <button
+                onClick={section.action}
+                className="bg-[#ebeef2] text-black px-8 py-3 rounded-md font-semibold hover:bg-[#cacfd8] transition"
+              >
+                {section.btn}
+              </button>
+            ) : (
+              <Link
+                to={section.to}
+                className="bg-[#ebeef2] text-black px-8 py-3 rounded-md font-semibold hover:bg-[#cacfd8] transition"
+              >
+                {section.btn}
+              </Link>
+            )}
           </motion.div>
         </section>
       ))}
 
       {/* --- Explore More Section --- */}
-      <section className="py-16 bg-[#fdfdfd]">
+      <section className="py-12 bg-[#fdfdfd]">
         <div className="container mx-auto px-6">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center mb-12"
+            className="text-center mb-10"
           >
             <h2 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-3">
               Explore More
@@ -298,19 +331,18 @@ const Home = () => {
                 className="relative"
               >
                 <div
-                  className="h-80 rounded-3xl overflow-hidden shadow-sm group relative flex flex-col"
+                  className="h-80 rounded-xl overflow-hidden shadow-sm group relative flex flex-col"
                   style={{ backgroundColor: card.bgColor }}
                 >
-  {/* Text Section */}
-<div className="p-5 flex-grow flex flex-col">
-  <span className="text-xs font-medium text-gray-600">
-    {card.title}
-  </span>
-  <h3 className="text-base lg:text-sm font-medium text-gray-900 leading-snug mt-1">
-    {card.desc}
-  </h3>
-</div>
-
+                  {/* Text Section */}
+                  <div className="p-5 flex-grow flex flex-col">
+                    <span className="text-xs font-medium text-gray-600">
+                      {card.title}
+                    </span>
+                    <h3 className="text-base lg:text-sm font-medium text-gray-900 leading-snug mt-1">
+                      {card.desc}
+                    </h3>
+                  </div>
 
                   {/* Image fills bottom half */}
                   <div
@@ -329,21 +361,43 @@ const Home = () => {
                 </div>
 
                 {/* Overlay Link */}
-                <Link
-                  to={card.to}
-                  className="absolute inset-0 z-10"
-                  aria-label={`Explore ${card.title}`}
-                />
+                {card.to.startsWith("#") ? (
+                  <button
+                    onClick={() => {
+                      if (card.to === "#acts") scrollToActs();
+                      else if (card.to === "#compare") scrollToCompare();
+                    }}
+                    className="absolute inset-0 z-10"
+                    aria-label={`Explore ${card.title}`}
+                  />
+                ) : (
+                  <Link
+                    to={card.to}
+                    className="absolute inset-0 z-10"
+                    aria-label={`Explore ${card.title}`}
+                  />
+                )}
               </motion.div>
             ))}
           </div>
         </div>
       </section>
+      
+      {/* --- Acts Explorer Section --- */}
+      <section ref={actsRef} id="acts" className="py-12 bg-[#fdfdfd] text-gray-900">
+        <ActsExplorer embedded={true} />
+      </section>
+
+      {/* --- Compare Acts Section --- */}
+      <section ref={compareRef} id="compare" className="py-12 bg-[#fdfdfd] text-gray-900">
+        <CompareActs embedded={true} />
+      </section>
+
 
       {/* --- Contact Section --- */}
       <section
         ref={contactRef}
-        className="py-16 text-center bg-[#fdfdfd]"
+        className="py-12 text-center bg-[#fdfdfd]"
         id="contact"
       >
         <motion.div
@@ -356,14 +410,14 @@ const Home = () => {
           <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900">
             Get in Touch
           </h2>
-          <p className="text-gray-600 max-w-xl mx-auto mb-10">
+          <p className="text-gray-600 max-w-xl mx-auto mb-8">
             Questions or suggestions? We'd love to hear from you.
           </p>
 
           <motion.form
             ref={form}
             onSubmit={sendEmail}
-            className="max-w-xl mx-auto flex flex-col gap-4 p-6 md:p-8 rounded-2xl bg-white border border-gray-200 shadow-lg"
+            className="max-w-xl mx-auto flex flex-col gap-4 p-6 rounded-2xl bg-white border border-gray-200 shadow-lg"
             whileHover={{ y: -5 }}
             transition={{ type: "spring", stiffness: 300 }}
           >

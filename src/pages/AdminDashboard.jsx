@@ -1,18 +1,18 @@
 import { supabase } from '../supabaseClient';
-import React, { useState, useEffect } from "react"; 
-import RichTextEditor from "../components/RichTextEditor"; 
-import { motion } from "framer-motion"; 
-import MenuBookIcon from "@mui/icons-material/MenuBook"; 
-import NewspaperIcon from "@mui/icons-material/Newspaper"; 
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf"; 
-import MenuIcon from "@mui/icons-material/Menu"; 
-import CloseIcon from "@mui/icons-material/Close"; 
-import SaveIcon from "@mui/icons-material/Save"; 
-import EditIcon from "@mui/icons-material/Edit"; 
-import DeleteIcon from "@mui/icons-material/Delete"; 
-import AddIcon from "@mui/icons-material/Add"; 
-import Alert from "@mui/material/Alert"; 
-import CircularProgress from "@mui/material/CircularProgress"; 
+import React, { useState, useEffect } from "react";
+import RichTextEditor from "../components/RichTextEditor";
+import { motion } from "framer-motion";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
+import NewspaperIcon from "@mui/icons-material/Newspaper";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
+import SaveIcon from "@mui/icons-material/Save";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
+import Alert from "@mui/material/Alert";
+import CircularProgress from "@mui/material/CircularProgress";
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
 // --- Reusable Components & Animations ---
@@ -79,7 +79,7 @@ const PdfCard = ({ pdf, onEdit, onDelete }) => {
   const [showPreview, setShowPreview] = useState(false);
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -91,15 +91,15 @@ const PdfCard = ({ pdf, onEdit, onDelete }) => {
         <div className="flex justify-between items-start mb-3">
           <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{pdf.title}</h3>
           <div className="flex space-x-2">
-            <button 
-              onClick={() => onEdit(pdf)} 
+            <button
+              onClick={() => onEdit(pdf)}
               className="text-blue-600 hover:text-blue-800 transition p-1 rounded-full hover:bg-blue-50"
               aria-label="Edit"
             >
               <EditIcon fontSize="small" />
             </button>
-            <button 
-              onClick={() => onDelete(pdf)} 
+            <button
+              onClick={() => onDelete(pdf)}
               className="text-red-600 hover:text-red-800 transition p-1 rounded-full hover:bg-red-50"
               aria-label="Delete"
             >
@@ -107,13 +107,13 @@ const PdfCard = ({ pdf, onEdit, onDelete }) => {
             </button>
           </div>
         </div>
-        
+       
         <p className="text-gray-600 text-sm mb-2">
           {pdf.category} • {pdf.status} • v{pdf.version}
         </p>
-        
+       
         <p className="text-gray-700 mb-4 line-clamp-2">{pdf.description}</p>
-        
+       
         <div className="flex flex-wrap gap-2 mb-4">
           <a
             href={pdf.file_url}
@@ -310,7 +310,7 @@ const AdminDashboard = () => {
         fileUrl = await uploadFileToSupabase(pdfForm.file);
       }
 
-      const pdfData = { 
+      const pdfData = {
         title: pdfForm.title,
         description: pdfForm.description,
         category: pdfForm.category,
@@ -396,22 +396,31 @@ const AdminDashboard = () => {
     <div className="flex min-h-screen bg-gray-50 text-black relative">
       <aside className="hidden md:flex w-64 bg-[#DDDDDD] text-black flex-col py-8 px-4 shadow-lg"><SidebarContent /></aside>
 
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-[#DDDDDD] text-black flex items-center justify-between px-4 py-3 shadow z-30">
+      {/* Mobile Header - Fixed with better styling */}
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-gray-800 text-white flex items-center justify-between px-4 py-4 shadow-lg z-50">
         <h1 className="text-xl font-bold">Admin Panel</h1>
-        <button onClick={() => setSidebarOpen(true)} aria-label="Open menu"><MenuIcon /></button>
+        <button 
+          onClick={() => setSidebarOpen(true)} 
+          aria-label="Open menu"
+          className="p-2 bg-white text-gray-800 rounded-md shadow-sm hover:bg-gray-100 transition"
+        >
+          <MenuIcon />
+        </button>
       </div>
 
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 flex">
+        <div className="fixed inset-0 z-40 flex md:hidden">
           <div className="fixed inset-0 bg-black/60" onClick={() => setSidebarOpen(false)} />
           <aside className="relative w-64 bg-[#DDDDDD] text-black flex flex-col py-8 px-4 shadow-lg z-50">
-            <button className="absolute top-4 right-4" onClick={() => setSidebarOpen(false)} aria-label="Close menu"><CloseIcon /></button>
+            <button className="absolute top-4 right-4 p-1 bg-gray-200 rounded-full" onClick={() => setSidebarOpen(false)} aria-label="Close menu">
+              <CloseIcon />
+            </button>
             <SidebarContent />
           </aside>
         </div>
       )}
 
-      <main className="flex-1 p-6 sm:p-10 overflow-y-auto w-full mt-16 md:mt-0">
+      <main className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto w-full mt-16 md:mt-0">
         {message.text && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 max-w-4xl mx-auto">
             <Alert severity={message.type} onClose={() => setMessage({ type: "", text: "" })}>{message.text}</Alert>
@@ -420,14 +429,18 @@ const AdminDashboard = () => {
 
         {activeTab === "acts" && (
           <div className="max-w-4xl mx-auto">
-            <motion.form key="acts-form" onSubmit={handleActSubmit} initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-6 sm:p-8 space-y-6 mb-8">
-              <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-bold text-gray-900">{isEditing ? "Edit Act" : "Add New Act"}</h2>
-                {isEditing && <button type="button" onClick={resetForms} className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium transition"><AddIcon className="mr-2" />Add New</button>}
+            <motion.form key="acts-form" onSubmit={handleActSubmit} initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8 space-y-6 mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{isEditing ? "Edit Act" : "Add New Act"}</h2>
+                {isEditing && (
+                  <button type="button" onClick={resetForms} className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium transition">
+                    <AddIcon className="mr-2" />Add New
+                  </button>
+                )}
               </div>
               <FormInput label="Title" type="text" value={actForm.title} error={errors.act.title} onChange={(e) => setActForm({ ...actForm, title: e.target.value })} required />
               <FormTextarea label="Description" rows="3" value={actForm.description} error={errors.act.description} onChange={(e) => setActForm({ ...actForm, description: e.target.value })} required />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                 <FormSelect label="Category" value={actForm.category} error={errors.act.category} onChange={(e) => setActForm({ ...actForm, category: e.target.value })} required>
                   <option value="">Select a category</option>
                   <option value="Income Tax">Income Tax</option>
@@ -446,26 +459,26 @@ const AdminDashboard = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Content {errors.act.content && <span className="text-red-600">- {errors.act.content}</span>}</label>
                 <RichTextEditor value={actForm.content} onChange={(content) => setActForm({ ...actForm, content })} />
               </div>
-              <button type="submit" disabled={loading} className="flex items-center justify-center bg-black hover:bg-gray-800 text-white px-8 py-3 rounded-md font-semibold w-full md:w-auto transition disabled:opacity-70">
+              <button type="submit" disabled={loading} className="flex items-center justify-center bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-md font-semibold w-full md:w-auto transition disabled:opacity-70">
                 {loading ? <CircularProgress size={24} color="inherit" /> : <><SaveIcon className="mr-2" />{isEditing ? "Update Act" : "Add Act"}</>}
               </button>
             </motion.form>
 
-            <motion.div initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-6 sm:p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Existing Acts</h2>
+            <motion.div initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Existing Acts</h2>
               {loading ? <div className="flex justify-center py-8"><CircularProgress /></div> : acts.length === 0 ? <p className="text-gray-500 text-center py-8">No acts found. Add your first act above.</p> : (
                 <div className="space-y-4">
                   {acts.map((act) => (
                     <div key={act.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
-                      <div className="flex justify-between items-start">
-                        <div>
+                      <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
+                        <div className="flex-1">
                           <h3 className="text-lg font-semibold">{act.title}</h3>
                           <p className="text-gray-600 text-sm">{act.category} • {act.status} • v{act.version}</p>
                           <p className="text-gray-700 mt-2 line-clamp-2">{act.description}</p>
                         </div>
-                        <div className="flex space-x-2">
-                          <button onClick={() => handleEdit(act, 'act')} className="text-blue-600 hover:text-blue-800 transition" aria-label="Edit"><EditIcon /></button>
-                          <button onClick={() => handleDelete(act, 'act')} className="text-red-600 hover:text-red-800 transition" aria-label="Delete"><DeleteIcon /></button>
+                        <div className="flex space-x-2 self-end sm:self-auto">
+                          <button onClick={() => handleEdit(act, 'act')} className="text-blue-600 hover:text-blue-800 transition p-1" aria-label="Edit"><EditIcon /></button>
+                          <button onClick={() => handleDelete(act, 'act')} className="text-red-600 hover:text-red-800 transition p-1" aria-label="Delete"><DeleteIcon /></button>
                         </div>
                       </div>
                     </div>
@@ -478,14 +491,18 @@ const AdminDashboard = () => {
 
         {activeTab === "news" && (
           <div className="max-w-4xl mx-auto">
-            <motion.form key="news-form" onSubmit={handleNewsSubmit} initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-6 sm:p-8 space-y-6 mb-8">
-                <div className="flex justify-between items-center">
-                    <h2 className="text-3xl font-bold text-gray-900">{isEditing ? "Edit News Article" : "Add News Article"}</h2>
-                    {isEditing && <button type="button" onClick={resetForms} className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium transition"><AddIcon className="mr-2" />Add New</button>}
+            <motion.form key="news-form" onSubmit={handleNewsSubmit} initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8 space-y-6 mb-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{isEditing ? "Edit News Article" : "Add News Article"}</h2>
+                    {isEditing && (
+                      <button type="button" onClick={resetForms} className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium transition">
+                        <AddIcon className="mr-2" />Add New
+                      </button>
+                    )}
                 </div>
                 <FormInput label="Title" type="text" value={newsForm.title} error={errors.news.title} onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })} required />
                 <FormTextarea label="Description" rows="3" value={newsForm.description} error={errors.news.description} onChange={(e) => setNewsForm({ ...newsForm, description: e.target.value })} required />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                     <FormSelect label="Category" value={newsForm.category} error={errors.news.category} onChange={(e) => setNewsForm({ ...newsForm, category: e.target.value })} required>
                         <option value="">Select a category</option>
                         <option value="Tax News">Tax News</option>
@@ -504,25 +521,25 @@ const AdminDashboard = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Content {errors.news.content && <span className="text-red-600">- {errors.news.content}</span>}</label>
                     <RichTextEditor value={newsForm.content} onChange={(content) => setNewsForm({ ...newsForm, content })} />
                 </div>
-                <button type="submit" disabled={loading} className="flex items-center justify-center bg-black hover:bg-gray-800 text-white px-8 py-3 rounded-md font-semibold w-full md:w-auto transition disabled:opacity-70">
+                <button type="submit" disabled={loading} className="flex items-center justify-center bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-md font-semibold w-full md:w-auto transition disabled:opacity-70">
                     {loading ? <CircularProgress size={24} color="inherit" /> : <><SaveIcon className="mr-2" />{isEditing ? "Update News" : "Add News"}</>}
                 </button>
             </motion.form>
-            <motion.div initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-6 sm:p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Existing News Articles</h2>
+            <motion.div initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Existing News Articles</h2>
                 {loading ? <div className="flex justify-center py-8"><CircularProgress /></div> : news.length === 0 ? <p className="text-gray-500 text-center py-8">No news articles found.</p> : (
                     <div className="space-y-4">
                         {news.map((newsItem) => (
                             <div key={newsItem.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
-                                <div className="flex justify-between items-start">
-                                    <div>
+                                <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
+                                    <div className="flex-1">
                                         <h3 className="text-lg font-semibold">{newsItem.title}</h3>
                                         <p className="text-gray-600 text-sm">{newsItem.category} • {newsItem.status} • v{newsItem.version}</p>
                                         <p className="text-gray-700 mt-2 line-clamp-2">{newsItem.description}</p>
                                     </div>
-                                    <div className="flex space-x-2">
-                                        <button onClick={() => handleEdit(newsItem, 'news')} className="text-blue-600 hover:text-blue-800 transition" aria-label="Edit"><EditIcon /></button>
-                                        <button onClick={() => handleDelete(newsItem, 'news')} className="text-red-600 hover:text-red-800 transition" aria-label="Delete"><DeleteIcon /></button>
+                                    <div className="flex space-x-2 self-end sm:self-auto">
+                                        <button onClick={() => handleEdit(newsItem, 'news')} className="text-blue-600 hover:text-blue-800 transition p-1" aria-label="Edit"><EditIcon /></button>
+                                        <button onClick={() => handleDelete(newsItem, 'news')} className="text-red-600 hover:text-red-800 transition p-1" aria-label="Delete"><DeleteIcon /></button>
                                     </div>
                                 </div>
                             </div>
@@ -535,14 +552,18 @@ const AdminDashboard = () => {
 
         {activeTab === "pdfs" && (
           <div className="max-w-6xl mx-auto">
-            <motion.form key="pdfs-form" onSubmit={handlePdfSubmit} initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-6 sm:p-8 space-y-6 mb-8">
-                <div className="flex justify-between items-center">
-                    <h2 className="text-3xl font-bold text-gray-900">{isEditing ? "Edit PDF" : "Add New PDF"}</h2>
-                    {isEditing && <button type="button" onClick={resetForms} className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium transition"><AddIcon className="mr-2" />Add New</button>}
+            <motion.form key="pdfs-form" onSubmit={handlePdfSubmit} initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8 space-y-6 mb-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{isEditing ? "Edit PDF" : "Add New PDF"}</h2>
+                    {isEditing && (
+                      <button type="button" onClick={resetForms} className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium transition">
+                        <AddIcon className="mr-2" />Add New
+                      </button>
+                    )}
                 </div>
                 <FormInput label="Title" type="text" value={pdfForm.title} error={errors.pdf.title} onChange={(e) => setPdfForm({ ...pdfForm, title: e.target.value })} required />
                 <FormTextarea label="Description" rows="3" value={pdfForm.description} error={errors.pdf.description} onChange={(e) => setPdfForm({ ...pdfForm, description: e.target.value })} required />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                   <FormSelect label="Category" value={pdfForm.category} error={errors.pdf.category} onChange={(e) => setPdfForm({ ...pdfForm, category: e.target.value })} required>
                     <option value="">Select a category</option>
                     <option value="Income Tax">Income Tax</option>
@@ -560,18 +581,18 @@ const AdminDashboard = () => {
                 <FileUpload label="PDF File" accept=".pdf" error={errors.pdf.file} onChange={handleFileChange} />
                 {isEditing && pdfForm.file_url && (
                   <div className="mt-2">
-                      <p className="text-sm text-gray-600">Current file: 
+                      <p className="text-sm text-gray-600">Current file:
                            <a href={pdfForm.file_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-blue-600 hover:underline">View PDF</a>
                       </p>
                   </div>
                 )}
-                <button type="submit" disabled={loading} className="flex items-center justify-center bg-black hover:bg-gray-800 text-white px-8 py-3 rounded-md font-semibold w-full md:w-auto transition disabled:opacity-70">
+                <button type="submit" disabled={loading} className="flex items-center justify-center bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-md font-semibold w-full md:w-auto transition disabled:opacity-70">
                     {loading ? <CircularProgress size={24} color="inherit" /> : <><SaveIcon className="mr-2" />{isEditing ? "Update PDF" : "Add PDF"}</>}
                 </button>
             </motion.form>
-            
-            <motion.div initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-6 sm:p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Existing PDFs</h2>
+           
+            <motion.div initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6">Existing PDFs</h2>
                 {loading ? (
                   <div className="flex justify-center py-8">
                     <CircularProgress />
@@ -579,11 +600,11 @@ const AdminDashboard = () => {
                 ) : pdfs.length === 0 ? (
                   <p className="text-gray-500 text-center py-8">No PDFs found.</p>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     {pdfs.map((pdf) => (
-                      <PdfCard 
-                        key={pdf.id} 
-                        pdf={pdf} 
+                      <PdfCard
+                        key={pdf.id}
+                        pdf={pdf}
                         onEdit={() => handleEdit(pdf, 'pdf')}
                         onDelete={() => handleDelete(pdf, 'pdf')}
                       />

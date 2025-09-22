@@ -508,7 +508,7 @@ const ComparisonMode = ({ acts, pdfs }) => {
 //  🏛️ MAIN PAGE COMPONENT (CompareActs.jsx)                       //
 //================================================================//
 
-const CompareActs = () => {
+const CompareActs = ({ embedded = false }) => {
   const [mode, setMode] = useState("compare"); // 'compare' or 'ai'
   const { acts, pdfs, loading: dataLoading, error: dataError } = useDocuments();
 
@@ -529,18 +529,20 @@ const CompareActs = () => {
 
   return (
     <div className="bg-white text-black min-h-screen">
-      {/* Hero Section */}
-      <section className="relative h-[40vh] flex flex-col items-center justify-center text-center" style={{ backgroundImage: `url(/compare-bg.jpg)`, backgroundSize: "cover", backgroundPosition: "center" }}>
-        <div className="absolute inset-0 bg-black/40" />
-        <motion.div initial="hidden" animate="visible" variants={fadeIn} className="relative z-10 px-4">
-          <div className="mb-4 text-white">{currentHero.icon}</div>
-          <h1 className="text-4xl md:text-6xl font-bold mb-4">{currentHero.title}</h1>
-          <p className="text-lg text-gray-200 max-w-2xl mx-auto">{currentHero.subtitle}</p>
-        </motion.div>
-      </section>
+      {/* Hero Section - Conditionally render */}
+      {!embedded && (
+        <section className="relative h-[40vh] flex flex-col items-center justify-center text-center" style={{ backgroundImage: `url(/compare-bg.jpg)`, backgroundSize: "cover", backgroundPosition: "center" }}>
+          <div className="absolute inset-0 bg-black/40" />
+          <motion.div initial="hidden" animate="visible" variants={fadeIn} className="relative z-10 px-4">
+            <div className="mb-4 text-white">{currentHero.icon}</div>
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">{currentHero.title}</h1>
+            <p className="text-lg text-gray-200 max-w-2xl mx-auto">{currentHero.subtitle}</p>
+          </motion.div>
+        </section>
+      )}
 
       {/* Main Content Section */}
-      <section className="bg-[#f4f3ef] py-16">
+      <section className={`${embedded ? "pt-0" : "pt-16"} bg-[#f4f3ef] pb-16`}>
         <div className="container mx-auto px-6">
           {/* Mode Selection Tabs */}
           <div className="flex justify-center mb-12">
