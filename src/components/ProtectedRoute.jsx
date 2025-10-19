@@ -2,8 +2,8 @@ import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const ProtectedRoute = ({ children }) => {
-  const { currentUser, loading } = useAuth();
+const ProtectedRoute = ({ children, requiredRole }) => {
+  const { currentUser, role, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -11,6 +11,7 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!currentUser) {
+    // Redirect to login if not logged in
     const redirectPath = location.pathname + location.search;
     return (
       <Navigate
@@ -18,6 +19,11 @@ const ProtectedRoute = ({ children }) => {
         replace
       />
     );
+  }
+
+  if (requiredRole && role !== requiredRole) {
+    // Redirect home (or a 403 page) if not authorized
+    return <Navigate to="/" replace />;
   }
 
   return children;

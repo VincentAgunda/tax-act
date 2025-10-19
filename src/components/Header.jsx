@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Link as ScrollLink } from 'react-scroll';
+import { Link as ScrollLink } from "react-scroll";
 import { useAuth } from "../context/AuthContext";
-import MenuIcon from "@mui/icons-material/Menu";
-import CloseIcon from "@mui/icons-material/Close";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Header = () => {
   const { currentUser, logout } = useAuth();
@@ -49,8 +48,29 @@ const Header = () => {
     { path: "acts", label: "Acts Explorer", type: "scroll" },
     { path: "compare", label: "Compare Acts", type: "scroll" },
     { path: "/news", label: "News Feed", type: "link" },
-    ...(currentUser ? [{ path: "/admin", label: "Admin Dashboard", type: "link" }] : []),
+    ...(currentUser
+      ? [{ path: "/admin", label: "Admin Dashboard", type: "link" }]
+      : []),
   ];
+
+  // Motion Variants
+  const sidebarVariants = {
+    hidden: { x: "100%" },
+    visible: { x: 0, transition: { type: "tween", duration: 0.3 } },
+    exit: { x: "100%", transition: { type: "tween", duration: 0.3 } },
+  };
+
+  const listVariants = {
+    hidden: {},
+    visible: {
+      transition: { staggerChildren: 0.1 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: 20 },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.3 } },
+  };
 
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
@@ -113,68 +133,96 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Hamburger Menu */}
+          {/* Hamburger Menu (Animated Icon) */}
           <button
             onClick={toggleNavMenu}
-            className="text-black focus:outline-none p-2 rounded-full hover:bg-gray-100 transition-colors"
+            className="relative w-8 h-8 flex flex-col justify-between items-center p-2 group"
           >
-            <MenuIcon />
+            <span
+              className={`block h-0.5 w-6 bg-black transform transition duration-300 ease-in-out ${
+                isNavMenuOpen ? "rotate-45 translate-y-2" : ""
+              }`}
+            />
+            <span
+              className={`block h-0.5 w-6 bg-black transition duration-300 ease-in-out ${
+                isNavMenuOpen ? "opacity-0" : ""
+              }`}
+            />
+            <span
+              className={`block h-0.5 w-6 bg-black transform transition duration-300 ease-in-out ${
+                isNavMenuOpen ? "-rotate-45 -translate-y-2" : ""
+              }`}
+            />
           </button>
         </div>
       </div>
 
       {/* --- Fullscreen Slide-in Drawer Menu --- */}
-      <div
-        className={`fixed inset-0 z-50 bg-black bg-opacity-40 transition-opacity duration-300 ${
-          isNavMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={closeMenus}
-      >
-        <div
-          className={`absolute top-0 right-0 h-full w-72 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
-          ${isNavMenuOpen ? "translate-x-0" : "translate-x-full"}`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center justify-between p-4 border-b">
-            <span className="text-lg font-bold text-gray-800">Menu</span>
-            <button onClick={closeMenus} className="p-2">
-              <CloseIcon />
-            </button>
-          </div>
-          <nav className="flex flex-col p-4 space-y-2">
-            {navLinks.map((link) => (
-              link.type === "scroll" ? (
-                <ScrollLink
-                  key={link.path}
-                  to={link.path}
-                  smooth={true}
-                  duration={500}
-                  onClick={closeMenus}
-                  className={`px-3 py-2 rounded-md text-base cursor-pointer ${
-                    isActive(link.path)
-                      ? "font-bold bg-gray-100 text-black"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  {link.label}
-                </ScrollLink>
-              ) : (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`px-3 py-2 rounded-md text-base ${
-                    isActive(link.path)
-                      ? "font-bold bg-gray-100 text-black"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              )
-            ))}
-          </nav>
-        </div>
-      </div>
+      <AnimatePresence>
+        {isNavMenuOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-black bg-opacity-40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closeMenus}
+          >
+            <motion.div
+              className="absolute top-0 right-0 h-full w-72 bg-white shadow-lg p-4"
+              variants={sidebarVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b pb-3 mb-6">
+                <span className="text-lg font-bold text-gray-800">Menu</span>
+              </div>
+
+              <motion.nav
+                className="flex flex-col space-y-4"
+                variants={listVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {navLinks.map((link) =>
+                  link.type === "scroll" ? (
+                    <motion.div key={link.path} variants={itemVariants}>
+                      <ScrollLink
+                        to={link.path}
+                        smooth={true}
+                        duration={500}
+                        onClick={closeMenus}
+                        className={`block px-4 py-3 rounded-md text-lg cursor-pointer ${
+                          isActive(link.path)
+                            ? "font-bold bg-gray-100 text-black"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {link.label}
+                      </ScrollLink>
+                    </motion.div>
+                  ) : (
+                    <motion.div key={link.path} variants={itemVariants}>
+                      <Link
+                        to={link.path}
+                        onClick={closeMenus}
+                        className={`block px-4 py-3 rounded-md text-lg ${
+                          isActive(link.path)
+                            ? "font-bold bg-gray-100 text-black"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {link.label}
+                      </Link>
+                    </motion.div>
+                  )
+                )}
+              </motion.nav>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 };

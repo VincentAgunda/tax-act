@@ -9,19 +9,29 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
+  const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get session
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setCurrentUser(session?.user ?? null);
+      if (session?.user) {
+        setCurrentUser(session.user);
+        setRole(session.user.user_metadata?.role || "user"); // default user
+      }
       setLoading(false);
     });
 
-    // Listen for auth changes
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setCurrentUser(session?.user ?? null);
+        if (session?.user) {
+          setCurrentUser(session.user);
+          setRole(session.user.user_metadata?.role || "user");
+        } else {
+          setCurrentUser(null);
+          setRole(null);
+        }
       }
     );
 
@@ -32,7 +42,7 @@ export function AuthProvider({ children }) {
     await supabase.auth.signOut();
   };
 
-  const value = { currentUser, logout };
+  const value = { currentUser, role, loading, logout };
 
   return (
     <AuthContext.Provider value={value}>

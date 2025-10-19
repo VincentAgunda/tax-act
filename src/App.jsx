@@ -7,9 +7,9 @@ import ActViewer from './pages/ActViewer';
 import NewsFeed from './pages/NewsFeed';
 import AdminDashboard from './pages/AdminDashboard';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import Register from './pages/Register';
 
 function App() {
   return (
@@ -27,7 +27,7 @@ function App() {
               <Route 
                 path="/admin" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="admin">
                     <AdminDashboard />
                   </ProtectedRoute>
                 } 

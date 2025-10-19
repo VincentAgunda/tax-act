@@ -85,7 +85,7 @@ const NewsFeed = () => {
   ];
 
   return (
-    <div className="bg-[#AAAAAA] text-black min-h-screen">
+    <div className="bg-[#E7E1DA] text-black min-h-screen">
       {/* Hero Section */}
       <section
         className="relative h-[50vh] flex flex-col items-center justify-center text-center"

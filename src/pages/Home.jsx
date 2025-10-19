@@ -230,7 +230,7 @@ const Home = () => {
           title: "Browse Legislation",
           desc: "Access a complete database of tax acts with version history and detailed insights.",
           action: scrollToActs,
-          bg: "#DDDDDD",
+          bg: "#f0e6ef",
           btn: "View Acts",
           icon: <MenuBookIcon fontSize="large" className="mb-4 text-black" />,
           overlay: "bg-black/20",
@@ -240,7 +240,7 @@ const Home = () => {
           title: "Compare Versions",
           desc: "Easily track legislative changes across different versions.",
           action: scrollToCompare,
-          bg: "#AAAAAA",
+          bg: "#F5EAE8",
           btn: "Compare Now",
           icon: (
             <CompareArrowsIcon fontSize="large" className="mb-4 text-black" />
@@ -252,10 +252,10 @@ const Home = () => {
           title: "Stay Informed",
           desc: "Get the latest news and updates about tax laws and policy changes.",
           to: "/news",
-          bg: "#DDDDDD",
+          bg: "#F1EDF5",
           btn: "See News",
           icon: <NewspaperIcon fontSize="large" className="mb-4 text-white" />,
-          overlay: "bg-black/40",
+          overlay: "bg-black/20",
           textColor: "black",
         },
       ].map((section, i) => (
