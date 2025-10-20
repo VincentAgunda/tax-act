@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import AddIcon from "@mui/icons-material/Add";
 
@@ -23,8 +23,8 @@ const ActCard = ({ act }) => {
       transition={{ duration: 0.2, ease: "easeInOut" }}
       className="relative rounded-2xl shadow-lg backdrop-blur-lg border border-white/40 
                  bg-gradient-to-br from-[#fdfdfd] via-[#f8f8f9] to-[#f5f5f7] p-6 
-                 cursor-pointer" // Make it look clickable
-      onClick={() => navigate(`/act/${act.id}`)} // Navigate on click
+                 cursor-pointer"
+      onClick={() => navigate(`/act/${act.id}`)}
     >
       <h3 className="text-lg font-semibold text-gray-800 mb-2">{act.title}</h3>
 
@@ -59,14 +59,14 @@ const ActCard = ({ act }) => {
       <div className="flex flex-wrap gap-2">
         <Link
           to={`/act/${act.id}`}
-          onClick={handleInnerClick} // Stop event bubbling
+          onClick={handleInnerClick}
           className="flex items-center px-3 py-1 rounded-md text-sm font-medium 
                      bg-[#d6d8e0] text-black shadow-sm hover:bg-[#c6c8d0] transition"
         >
           View Details
         </Link>
         <button
-          onClick={handleShowMoreClick} // Use dedicated handler
+          onClick={handleShowMoreClick}
           className="px-3 py-1 rounded-md text-sm font-medium text-gray-900 
                      bg-[#FFD600] hover:bg-[#e6c200] transition shadow-sm"
         >
@@ -83,7 +83,7 @@ const ActCard = ({ act }) => {
       >
         <Link
           to={`/act/${act.id}`}
-          onClick={handleInnerClick} // Stop event bubbling
+          onClick={handleInnerClick}
           className="flex items-center justify-center w-full h-full"
         >
           <AddIcon className="text-white text-lg" />
