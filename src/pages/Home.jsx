@@ -47,7 +47,7 @@ const heroSlides = [
     btn2: { text: "Learn More", to: "#about" },
   },
   {
-    img: "/hero8.jpg",
+    img: "/hero9.jpg",
     title: "Stay Informed",
     desc: "Get the latest updates about tax laws and policies.",
     btn1: { text: "See News", to: "#news" },
@@ -244,7 +244,7 @@ const Home = () => {
     title: "Compare Versions",
     desc: "Easily track legislative changes across different versions.",
     action: scrollToCompare,
-    bg: "#F1EDF5", // soft peach-pink tone
+    bg: "#E3EDF7", // soft peach-pink tone
     btn: "Compare Now",
     icon: (
       <CompareArrowsIcon fontSize="large" className="mb-4 text-black" />
