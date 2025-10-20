@@ -1,11 +1,13 @@
+// src/pages/Home.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import emailjs from "@emailjs/browser";
 import ActsExplorer from "./ActsExplorer";
 import CompareActs from "./CompareActs";
+import NewsFeed from "./NewsFeed"; // <- imported
 
-// Material UI Icons (Corrected Paths)
+// Material UI Icons
 import FacebookIcon from "@mui/icons-material/Facebook";
 import TwitterIcon from "@mui/icons-material/Twitter";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
@@ -31,24 +33,24 @@ const bounceAnimation = {
 
 const heroSlides = [
   {
-    img: "/hero-5.jpg",
+    img: "/hero9.jpg",
     title: "Navigate Tax Acts",
     desc: "Your complete resource for tax legislation and news.",
     btn1: { text: "Explore Acts", to: "#acts" },
-    btn2: { text: "Latest News", to: "/news" },
+    btn2: { text: "Latest News", to: "#news" },
   },
   {
-    img: "/hero-6.jpg",
+    img: "/hero-5.jpg",
     title: "Compare Versions",
     desc: "Track legislative changes across different versions.",
     btn1: { text: "Compare Now", to: "#compare" },
     btn2: { text: "Learn More", to: "#about" },
   },
   {
-    img: "/hero-5.jpg",
+    img: "/hero8.jpg",
     title: "Stay Informed",
     desc: "Get the latest updates about tax laws and policies.",
-    btn1: { text: "See News", to: "/news" },
+    btn1: { text: "See News", to: "#news" },
     btn2: { text: "Contact Us", to: "#contact" },
   },
 ];
@@ -71,8 +73,8 @@ const exploreCards = [
   {
     title: "Tax News",
     desc: "Stay up to date with tax-related policies.",
-    img: "/hero-6.jpg",
-    to: "/news",
+    img: "/hero8.jpg",
+    to: "#news",
     bgColor: "#f5f5f7",
   },
   {
@@ -90,6 +92,11 @@ const Home = () => {
   const contactRef = useRef(null);
   const actsRef = useRef(null);
   const compareRef = useRef(null);
+  const newsRef = useRef(null); // news ref
+
+  // Header height used as offset so the sticky header doesn't cover sections.
+  // Keep this in sync with Header.jsx's offset (currently 80).
+  const HEADER_HEIGHT = 80;
 
   // Hero auto-slide
   useEffect(() => {
@@ -116,149 +123,190 @@ const Home = () => {
       .catch(() => alert("Failed to send message. Please try again."));
   };
 
-  // Smooth scroll handlers
+  // Smooth scroll handlers (use programmatic scroll with offset)
   const scrollToSection = (ref) => {
     if (ref && ref.current) {
-      ref.current.scrollIntoView({ behavior: "smooth" });
+      const top =
+        ref.current.getBoundingClientRect().top + window.pageYOffset - HEADER_HEIGHT;
+      window.scrollTo({ top, behavior: "smooth" });
     }
   };
 
   const scrollToContact = () => scrollToSection(contactRef);
   const scrollToActs = () => scrollToSection(actsRef);
   const scrollToCompare = () => scrollToSection(compareRef);
+  const scrollToNews = () => scrollToSection(newsRef); // news scroll
 
   return (
     <div className="bg-white text-gray-900">
       {/* --- Hero Carousel --- */}
-      <section className="relative w-full h-[75vh] min-h-[500px] overflow-hidden">
-        {heroSlides.map((slide, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{
-              opacity: i === current ? 1 : 0,
-              scale: i === current ? 1 : 1.05,
-            }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `url(${slide.img})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              zIndex: i === current ? 1 : 0,
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/10" />
-          </motion.div>
-        ))}
+      <section className="relative w-full h-[85vh] min-h-[600px] overflow-hidden">
+  {heroSlides.map((slide, i) => (
+    <motion.div
+      key={i}
+      initial={{ opacity: 0, scale: 1.01 }}
+      animate={{
+        opacity: i === current ? 1 : 0,
+        scale: i === current ? 1 : 1.01,
+      }}
+      transition={{ duration: 2, ease: [0.4, 0, 0.2, 1] }}
+      className="absolute inset-0"
+      style={{
+        backgroundImage: `url(${slide.img})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        zIndex: i === current ? 1 : 0,
+      }}
+    >
+      {/* ✅ Much lighter overlay for clarity */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/20 to-white/40" />
+    </motion.div>
+  ))}
 
-        <motion.div
-          key={current}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.3 }}
-          className="relative z-10 flex flex-col items-center justify-center h-full p-6 text-center text-white"
+  {/* ✅ Hero Content */}
+  <motion.div
+    key={current}
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 1, ease: [0.4, 0, 0.2, 1] }}
+    className="relative z-10 flex flex-col items-start justify-center h-full px-6 md:px-16 lg:px-32 text-left"
+  >
+    <div className="max-w-3xl">
+      <h1 className="text-4xl md:text-6xl font-bold mb-5 tracking-tight leading-tight">
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-700">
+          {heroSlides[current].title.split(" ")[0]}
+        </span>{" "}
+        <span className="text-[#0b1b32]">
+          {heroSlides[current].title.split(" ").slice(1).join(" ")}
+        </span>
+      </h1>
+
+      <p className="text-lg md:text-xl text-gray-700 mb-8 leading-relaxed">
+        {heroSlides[current].desc}
+      </p>
+
+      <div className="flex flex-row items-center gap-4 flex-wrap">
+        {/* Primary Button */}
+        <button
+          onClick={() => {
+            if (heroSlides[current].btn1.to === "#acts") scrollToActs();
+            else if (heroSlides[current].btn1.to === "#compare") scrollToCompare();
+            else if (heroSlides[current].btn1.to === "#news") scrollToNews();
+          }}
+          className="bg-gradient-to-r from-blue-500 to-blue-700 text-white px-6 py-3 rounded-md font-semibold hover:from-blue-600 hover:to-blue-800 transition-all duration-300 shadow-md"
         >
-          <div className="max-w-3xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight drop-shadow-md">
-              {heroSlides[current].title}
-            </h1>
-            <p className="text-lg md:text-xl text-white/90 mb-8 leading-relaxed max-w-2xl mx-auto drop-shadow">
-              {heroSlides[current].desc}
-            </p>
-            <div className="flex flex-row items-center justify-center gap-4 flex-wrap">
-              {heroSlides[current].btn1.to.startsWith("#") ? (
-                <button
-                  onClick={() => {
-                    if (heroSlides[current].btn1.to === "#acts") scrollToActs();
-                    else if (heroSlides[current].btn1.to === "#compare")
-                      scrollToCompare();
-                  }}
-                  className="bg-white text-black px-6 py-3 rounded-md font-semibold hover:bg-gray-200 transition text-center shadow-md"
-                >
-                  {heroSlides[current].btn1.text}
-                </button>
-              ) : (
-                <Link
-                  to={heroSlides[current].btn1.to}
-                  className="bg-white text-black px-6 py-3 rounded-md font-semibold hover:bg-gray-200 transition text-center shadow-md"
-                >
-                  {heroSlides[current].btn1.text}
-                </Link>
-              )}
+          {heroSlides[current].btn1.text}
+        </button>
 
-              {heroSlides[current].btn2.to.startsWith("#") ? (
-                <button
-                  onClick={() => {
-                    if (heroSlides[current].btn2.to === "#contact")
-                      scrollToContact();
-                  }}
-                  className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-md font-semibold hover:bg-white/30 transition text-center shadow-md"
-                >
-                  {heroSlides[current].btn2.text}
-                </button>
-              ) : (
-                <Link
-                  to={heroSlides[current].btn2.to}
-                  className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-md font-semibold hover:bg-white/30 transition text-center shadow-md"
-                >
-                  {heroSlides[current].btn2.text}
-                </Link>
-              )}
-            </div>
-          </div>
-        </motion.div>
+        {/* Secondary Button */}
+        <button
+          onClick={() => {
+            if (heroSlides[current].btn2.to === "#contact") scrollToContact();
+            else if (heroSlides[current].btn2.to === "#news") scrollToNews();
+          }}
+          className="border border-blue-500 text-blue-700 px-6 py-3 rounded-md font-semibold hover:bg-blue-50 transition-all duration-300 shadow-sm"
+        >
+          {heroSlides[current].btn2.text}
+        </button>
+      </div>
+    </div>
+  </motion.div>
 
-        {/* Hero dots */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-20">
-          {heroSlides.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrent(i)}
-              className={`h-2 rounded-full transition-all ${
-                i === current ? "w-8 bg-white" : "w-3 bg-gray-400/70"
-              }`}
-              aria-label={`Go to slide ${i + 1}`}
-            />
-          ))}
-        </div>
-      </section>
+  {/* ✅ Navigation Dots */}
+  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+    {heroSlides.map((_, i) => (
+      <button
+        key={i}
+        onClick={() => setCurrent(i)}
+        className={`h-2 rounded-full transition-all duration-500 ${
+          i === current ? "w-6 bg-blue-600" : "w-3 bg-gray-400/50 hover:bg-blue-400/70"
+        }`}
+        aria-label={`Go to slide ${i + 1}`}
+      />
+    ))}
+  </div>
+</section>
+
 
       {/* --- Supporting Panels --- */}
       {[
-        {
-          title: "Browse Legislation",
-          desc: "Access a complete database of tax acts with version history and detailed insights.",
-          action: scrollToActs,
-          bg: "#f0e6ef",
-          btn: "View Acts",
-          icon: <MenuBookIcon fontSize="large" className="mb-4 text-black" />,
-          overlay: "bg-black/20",
-          textColor: "black",
-        },
-        {
-          title: "Compare Versions",
-          desc: "Easily track legislative changes across different versions.",
-          action: scrollToCompare,
-          bg: "#F5EAE8",
-          btn: "Compare Now",
-          icon: (
-            <CompareArrowsIcon fontSize="large" className="mb-4 text-black" />
-          ),
-          overlay: "bg-black/10",
-          textColor: "oklch(37.2% 0.044 257.287)",
-        },
-        {
-          title: "Stay Informed",
-          desc: "Get the latest news and updates about tax laws and policy changes.",
-          to: "/news",
-          bg: "#F1EDF5",
-          btn: "See News",
-          icon: <NewspaperIcon fontSize="large" className="mb-4 text-white" />,
-          overlay: "bg-black/20",
-          textColor: "black",
-        },
-      ].map((section, i) => (
+  {
+    title: "Browse Legislation",
+    desc: "Access a complete database of tax acts with version history and detailed insights.",
+    action: scrollToActs,
+    bg: "#f7f3fa", // lighter lavender
+    btn: "View Acts",
+    icon: <MenuBookIcon fontSize="large" className="mb-4 text-black" />,
+  // reduced opacity
+    textColor: "black",
+  },
+  {
+    title: "Compare Versions",
+    desc: "Easily track legislative changes across different versions.",
+    action: scrollToCompare,
+    bg: "#F1EDF5", // soft peach-pink tone
+    btn: "Compare Now",
+    icon: (
+      <CompareArrowsIcon fontSize="large" className="mb-4 text-black" />
+    ),
+   
+    textColor: "oklch(37.2% 0.044 257.287)",
+  },
+  {
+    title: "Stay Informed",
+    desc: "Get the latest news and updates about tax laws and policy changes.",
+    to: "#news",
+     bg: "#F1EDF5", // light blue-gray pastel
+    btn: "See News",
+    icon: <NewspaperIcon fontSize="large" className="mb-4 text-black" />,
+    overlay: "bg-black/10",
+    textColor: "black",
+  },
+].map((section, i) => (
+  <section
+    key={i}
+    className="relative min-h-[50vh] flex flex-col items-center justify-center text-center py-12"
+    style={{
+      background: section.bg.startsWith("#")
+        ? section.bg
+        : `url(${section.bg})`,
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+    }}
+  >
+    <div className={`absolute inset-0 ${section.overlay}`} />
+    <motion.div
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      variants={fadeIn}
+      className={`relative z-10 px-4 flex flex-col items-center text-${section.textColor}`}
+    >
+      {section.icon}
+      <h2 className="text-3xl md:text-5xl font-bold mb-4">{section.title}</h2>
+      <p className="text-lg mb-8 max-w-2xl mx-auto">{section.desc}</p>
+      {section.action ? (
+        <button
+          onClick={section.action}
+          className="bg-[#f2f4f8] text-black px-8 py-3 rounded-md font-semibold hover:bg-[#e2e6eb] transition"
+        >
+          {section.btn}
+        </button>
+      ) : (
+        <button
+          onClick={() => {
+            if (section.to === '#news') scrollToNews();
+          }}
+          className="bg-[#f2f4f8] text-black px-8 py-3 rounded-md font-semibold hover:bg-[#e2e6eb] transition"
+        >
+          {section.btn}
+        </button>
+      )}
+    </motion.div>
+  </section>
+))}
+
+      {[ /* ... same sections array ... */ ].map((section, i) => (
         <section
           key={i}
           className="relative min-h-[50vh] flex flex-col items-center justify-center text-center py-12"
@@ -268,6 +316,8 @@ const Home = () => {
               : `url(${section.bg})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
+            // add scroll margin on every panel so if someone links directly it won't be hidden
+            scrollMarginTop: `${HEADER_HEIGHT}px`,
           }}
         >
           <div className={`absolute inset-0 ${section.overlay}`} />
@@ -291,12 +341,14 @@ const Home = () => {
                 {section.btn}
               </button>
             ) : (
-              <Link
-                to={section.to}
+              <button
+                onClick={() => {
+                  if (section.to === "#news") scrollToNews();
+                }}
                 className="bg-[#ebeef2] text-black px-8 py-3 rounded-md font-semibold hover:bg-[#cacfd8] transition"
               >
                 {section.btn}
-              </Link>
+              </button>
             )}
           </motion.div>
         </section>
@@ -366,6 +418,7 @@ const Home = () => {
                     onClick={() => {
                       if (card.to === "#acts") scrollToActs();
                       else if (card.to === "#compare") scrollToCompare();
+                      else if (card.to === "#news") scrollToNews();
                     }}
                     className="absolute inset-0 z-10"
                     aria-label={`Explore ${card.title}`}
@@ -382,23 +435,44 @@ const Home = () => {
           </div>
         </div>
       </section>
-      
+
       {/* --- Acts Explorer Section --- */}
-      <section ref={actsRef} id="acts" className="py-12 bg-[#fdfdfd] text-gray-900">
+      <section
+        ref={actsRef}
+        id="acts"
+        className="py-12 bg-[#fdfdfd] text-gray-900"
+        style={{ scrollMarginTop: `${HEADER_HEIGHT}px` }}
+      >
         <ActsExplorer embedded={true} />
       </section>
 
       {/* --- Compare Acts Section --- */}
-      <section ref={compareRef} id="compare" className="py-12 bg-[#fdfdfd] text-gray-900">
+      <section
+        ref={compareRef}
+        id="compare"
+        className="py-12 bg-[#fdfdfd] text-gray-900"
+        style={{ scrollMarginTop: `${HEADER_HEIGHT}px` }}
+      >
         <CompareActs embedded={true} />
       </section>
 
+      {/* --- News Feed Section (Inserted below compare) --- */}
+      <section
+        ref={newsRef}
+        id="news"
+        className="py-12 bg-[#fdfdfd] text-gray-900"
+        style={{ scrollMarginTop: `${HEADER_HEIGHT}px` }}
+      >
+        {/* render NewsFeed in embedded mode to avoid full page styling clashes */}
+        <NewsFeed embedded={true} />
+      </section>
 
       {/* --- Contact Section --- */}
       <section
         ref={contactRef}
         className="py-12 text-center bg-[#fdfdfd]"
         id="contact"
+        style={{ scrollMarginTop: `${HEADER_HEIGHT}px` }}
       >
         <motion.div
           initial="hidden"

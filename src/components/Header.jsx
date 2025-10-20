@@ -1,3 +1,4 @@
+// src/components/Header.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Link as ScrollLink } from "react-scroll";
@@ -47,11 +48,14 @@ const Header = () => {
     { path: "/", label: "Home", type: "link" },
     { path: "acts", label: "Acts Explorer", type: "scroll" },
     { path: "compare", label: "Compare Acts", type: "scroll" },
-    { path: "/news", label: "News Feed", type: "link" },
+    { path: "news", label: "News Feed", type: "scroll" },
     ...(currentUser
       ? [{ path: "/admin", label: "Admin Dashboard", type: "link" }]
       : []),
   ];
+
+  // Keep this in sync with Home.jsx HEADER_HEIGHT
+  const HEADER_OFFSET = 80;
 
   // Motion Variants
   const sidebarVariants = {
@@ -192,6 +196,7 @@ const Header = () => {
                         to={link.path}
                         smooth={true}
                         duration={500}
+                        offset={-HEADER_OFFSET}
                         onClick={closeMenus}
                         className={`block px-4 py-3 rounded-md text-lg cursor-pointer ${
                           isActive(link.path)
