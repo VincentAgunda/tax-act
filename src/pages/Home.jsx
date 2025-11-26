@@ -228,131 +228,101 @@ const Home = () => {
 </section>
 
 
-      {/* --- Supporting Panels --- */}
-      {[
-  {
-    title: "Browse Legislation",
-    desc: "Access a complete database of tax acts with version history and detailed insights.",
-    action: scrollToActs,
-    bg: "#f7f3fa", // lighter lavender
-    btn: "View Acts",
-    icon: <MenuBookIcon fontSize="large" className="mb-4 text-black" />,
-  // reduced opacity
-    textColor: "black",
-  },
-  {
-    title: "Compare Versions",
-    desc: "Easily track legislative changes across different versions.",
-    action: scrollToCompare,
-    bg: "#E3EDF7", // soft peach-pink tone
-    btn: "Compare Now",
-    icon: (
-      <CompareArrowsIcon fontSize="large" className="mb-4 text-black" />
-    ),
-   
-    textColor: "oklch(37.2% 0.044 257.287)",
-  },
-  {
-    title: "Stay Informed",
-    desc: "Get the latest news and updates about tax laws and policy changes.",
-    to: "#news",
-     bg: "#F1EDF5", // light blue-gray pastel
-    btn: "See News",
-    icon: <NewspaperIcon fontSize="large" className="mb-4 text-black" />,
-    overlay: "bg-black/10",
-    textColor: "black",
-  },
-].map((section, i) => (
-  <section
-    key={i}
-    className="relative min-h-[50vh] flex flex-col items-center justify-center text-center py-12"
-    style={{
-      background: section.bg.startsWith("#")
-        ? section.bg
-        : `url(${section.bg})`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-    }}
-  >
-    <div className={`absolute inset-0 ${section.overlay}`} />
-    <motion.div
-      initial="hidden"
-      whileInView="visible"
+{/* --- True Apple-Style Supporting Panels --- */}
+<div className="w-full px-4 md:px-10 mt-20 space-y-24">
+
+  {[
+    {
+      title: "Browse Legislation",
+      desc: "Access a complete database of tax acts with version history and detailed insights.",
+      action: scrollToActs,
+      bg: " #000000",
+      text: "text-white",
+      btnStyle: "light",
+      icon: <MenuBookIcon fontSize="large" className="mb-4 text-white opacity-90" />,
+    },
+    {
+      title: "Compare Versions",
+      desc: "Easily track legislative changes across different versions.",
+      action: scrollToCompare,
+      bg: " #F5F5F7 ",
+      text: "text-black",
+      btnStyle: "dark",
+      icon: <CompareArrowsIcon fontSize="large" className="mb-4 text-black opacity-80" />,
+    },
+    {
+      title: "Stay Informed",
+      desc: "Get the latest news and updates about tax laws and policy changes.",
+      to: "#news",
+      bg: " #8E8E93",
+      text: "text-white",
+      btnStyle: "light",
+      icon: <NewspaperIcon fontSize="large" className="mb-4 text-white opacity-90" />,
+    },
+  ].map((section, i) => (
+    <motion.section
+      key={i}
+      initial={{ opacity: 0, y: 60 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
       viewport={{ once: true }}
-      variants={fadeIn}
-      className={`relative z-10 px-4 flex flex-col items-center text-${section.textColor}`}
+      className="
+        relative w-full max-w-6xl mx-auto rounded-[40px]
+        py-24 px-10 flex flex-col items-center justify-center text-center
+        shadow-[0_40px_120px_-30px_rgba(0,0,0,0.35)]
+        overflow-hidden backdrop-blur-xl
+        transition-transform duration-500
+        hover:-translate-y-3 hover:shadow-[0_60px_160px_-40px_rgba(0,0,0,0.45)]
+      "
+      style={{ background: section.bg }}
     >
-      {section.icon}
-      <h2 className="text-3xl md:text-5xl font-bold mb-4">{section.title}</h2>
-      <p className="text-lg mb-8 max-w-2xl mx-auto">{section.desc}</p>
-      {section.action ? (
-        <button
-          onClick={section.action}
-          className="bg-[#f2f4f8] text-black px-8 py-3 rounded-md font-semibold hover:bg-[#e2e6eb] transition"
-        >
-          {section.btn}
-        </button>
-      ) : (
+
+      {/* Apple Glass Light Streak */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="
+          absolute top-0 left-1/3 w-1/2 h-full 
+          bg-white opacity-[0.07] 
+          blur-3xl rotate-[25deg]
+        "></div>
+      </div>
+
+      <div className="relative z-10 flex flex-col items-center">
+
+        {section.icon}
+
+        <h2 className={`text-4xl md:text-5xl font-semibold mb-4 tracking-tight ${section.text}`}>
+          {section.title}
+        </h2>
+
+        <p className={`
+          text-lg max-w-2xl mb-10 
+          ${section.text === "text-white" ? "text-gray-200" : "text-gray-700"}
+        `}>
+          {section.desc}
+        </p>
+
         <button
           onClick={() => {
-            if (section.to === '#news') scrollToNews();
+            if (section.action) section.action();
+            else if (section.to === "#news") scrollToNews();
           }}
-          className="bg-[#f2f4f8] text-black px-8 py-3 rounded-md font-semibold hover:bg-[#e2e6eb] transition"
+          className={`
+            px-12 py-3 rounded-full font-medium tracking-wide text-lg
+            transition-all duration-300
+            ${section.btnStyle === "light"
+              ? "bg-white text-black hover:bg-gray-200"
+              : "bg-black text-white hover:bg-gray-900"}
+          `}
         >
-          {section.btn}
+          {section.title}
         </button>
-      )}
-    </motion.div>
-  </section>
-))}
+      </div>
+    </motion.section>
+  ))}
 
-      {[ /* ... same sections array ... */ ].map((section, i) => (
-        <section
-          key={i}
-          className="relative min-h-[50vh] flex flex-col items-center justify-center text-center py-12"
-          style={{
-            background: section.bg.startsWith("#")
-              ? section.bg
-              : `url(${section.bg})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            // add scroll margin on every panel so if someone links directly it won't be hidden
-            scrollMarginTop: `${HEADER_HEIGHT}px`,
-          }}
-        >
-          <div className={`absolute inset-0 ${section.overlay}`} />
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeIn}
-            className={`relative z-10 px-4 flex flex-col items-center ${section.textColor}`}
-          >
-            {section.icon}
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">
-              {section.title}
-            </h2>
-            <p className="text-lg mb-8 max-w-2xl mx-auto">{section.desc}</p>
-            {section.action ? (
-              <button
-                onClick={section.action}
-                className="bg-[#ebeef2] text-black px-8 py-3 rounded-md font-semibold hover:bg-[#cacfd8] transition"
-              >
-                {section.btn}
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  if (section.to === "#news") scrollToNews();
-                }}
-                className="bg-[#ebeef2] text-black px-8 py-3 rounded-md font-semibold hover:bg-[#cacfd8] transition"
-              >
-                {section.btn}
-              </button>
-            )}
-          </motion.div>
-        </section>
-      ))}
+</div>
+
+
 
       {/* --- Explore More Section --- */}
       <section className="py-12 bg-[#fdfdfd]">
