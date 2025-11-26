@@ -6,8 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:analyze": "ANALYZE=true vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "analyze": "npm run build:analyze",
+    "analyze:deps": "node scripts/analyze-deps.js"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
@@ -23,12 +26,10 @@
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.542.0",
     "pdfjs-dist": "^5.4.149",
-    "quill": "^2.0.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-pdf": "^10.1.0",
     "react-quill-new": "^3.6.0",
-    "react-quilljs": "^2.0.5",
     "react-router-dom": "^7.8.2",
     "react-scroll": "^1.9.3"
   },
@@ -43,7 +44,9 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
     "postcss": "^8.5.6",
+    "rollup-plugin-visualizer": "^6.0.5",
     "tailwindcss": "^3.4.1",
-    "vite": "^7.1.2"
+    "vite": "^7.1.2",
+    "vite-bundle-analyzer": "^1.2.3"
   }
 }
