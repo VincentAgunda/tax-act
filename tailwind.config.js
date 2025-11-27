@@ -4,6 +4,12 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  safelist: [
+    'bg-red-50', 'text-red-600', 'border-red-500',
+    'bg-blue-50', 'text-blue-600', 'border-blue-500',
+    'bg-green-50', 'text-green-600', 'border-green-500',
+    'bg-yellow-50', 'text-yellow-600', 'border-yellow-500',
+  ],
   theme: {
     extend: {
       colors: {
@@ -39,8 +45,7 @@ export default {
     },
   },
   plugins: [
-    // Add line-clamp plugin for text truncation
-    function({ addUtilities }) {
+    function ({ addUtilities }) {
       const newUtilities = {
         '.line-clamp-1': {
           overflow: 'hidden',
@@ -60,28 +65,11 @@ export default {
           '-webkit-box-orient': 'vertical',
           '-webkit-line-clamp': '3',
         },
-      }
-      addUtilities(newUtilities)
-    }
+      };
+      addUtilities(newUtilities);
+    },
   ],
-  // Optimize build size
   corePlugins: {
     preflight: true,
-  },
-  // Purge unused CSS in production
-  purge: {
-    enabled: process.env.NODE_ENV === 'production',
-    content: [
-      './index.html',
-      './src/**/*.{js,jsx,ts,tsx}',
-    ],
-    options: {
-      safelist: [
-        'bg-red-50', 'text-red-600', 'border-red-500',
-        'bg-blue-50', 'text-blue-600', 'border-blue-500',
-        'bg-green-50', 'text-green-600', 'border-green-500',
-        'bg-yellow-50', 'text-yellow-600', 'border-yellow-500',
-      ],
-    },
   },
 };

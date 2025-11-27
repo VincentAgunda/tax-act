@@ -1,14 +1,15 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { splitVendorChunkPlugin } from 'vite'
 import { visualizer } from 'rollup-plugin-visualizer'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    react(),
-    splitVendorChunkPlugin(),
-    // Bundle analyzer (only in build)
+    react({
+      jsxImportSource: "@emotion/react",
+      babel: {
+        plugins: ["@emotion/babel-plugin"],
+      },
+    }),
     process.env.ANALYZE && visualizer({
       filename: 'dist/stats.html',
       open: true,
@@ -16,8 +17,8 @@ export default defineConfig({
       brotliSize: true,
     })
   ].filter(Boolean),
+
   build: {
-    // Enable tree shaking
     minify: 'terser',
     terserOptions: {
       compress: {
@@ -25,7 +26,7 @@ export default defineConfig({
         drop_debugger: true,
       },
     },
-    // Code splitting
+
     rollupOptions: {
       output: {
         manualChunks: {
@@ -40,29 +41,27 @@ export default defineConfig({
         },
       },
     },
-    // Enable source maps for development, disable for production
+
     sourcemap: false,
-    // Optimize chunk size
     chunkSizeWarningLimit: 1000,
   },
-  // Enable compression
-  server: {
-    compress: true,
-  },
-  // Optimize dependencies
+
   optimizeDeps: {
     include: [
       'react',
       'react-dom',
-      'framer-motion'
-    ],
-    exclude: [
-      // Let Vite handle these for better tree shaking
+      'framer-motion',
+      'react-is',
+      'prop-types',
       '@mui/material',
-      '@mui/icons-material'
+      '@mui/icons-material',
+      '@emotion/react',
+      '@emotion/styled',
+      'hoist-non-react-statics'
     ],
+    // ❌ REMOVE EXCLUDE → It breaks MUI and Emotion
   },
-  // Enable better tree shaking
+
   esbuild: {
     treeShaking: true,
     minifyIdentifiers: true,
