@@ -32,7 +32,7 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom'],
           mui: ['@mui/material', '@mui/icons-material'],
-          firebase: ['firebase'],
+        
           supabase: ['@supabase/supabase-js'],
           carousel: ['embla-carousel-react', 'embla-carousel-autoplay'],
           editor: ['react-quill-new', 'quill'],

@@ -23,7 +23,7 @@
     "deepmerge-ts": "^7.1.5",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
-    "firebase": "^12.2.1",
+   
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.542.0",
     "pdfjs-dist": "^5.4.149",
