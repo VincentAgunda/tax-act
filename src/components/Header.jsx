@@ -1,4 +1,3 @@
-// src/components/Header.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Link as ScrollLink } from "react-scroll";
@@ -54,10 +53,8 @@ const Header = () => {
       : []),
   ];
 
-  // Keep this in sync with Home.jsx HEADER_HEIGHT
   const HEADER_OFFSET = 80;
 
-  // Motion Variants
   const sidebarVariants = {
     hidden: { x: "100%" },
     visible: { x: 0, transition: { type: "tween", duration: 0.3 } },
@@ -66,9 +63,7 @@ const Header = () => {
 
   const listVariants = {
     hidden: {},
-    visible: {
-      transition: { staggerChildren: 0.1 },
-    },
+    visible: { transition: { staggerChildren: 0.1 } },
   };
 
   const itemVariants = {
@@ -79,15 +74,17 @@ const Header = () => {
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        {/* --- Left Section: Logo --- */}
+        
+        {/* Logo */}
         <div className="flex items-center space-x-3">
           <Link to="/" className="flex items-center space-x-2">
             <AccountBalanceIcon style={{ color: "#AAAAAA" }} fontSize="large" />
           </Link>
         </div>
 
-        {/* --- Right Section: Profile + Menu --- */}
+        {/* Right Section */}
         <div className="flex items-center space-x-3">
+          
           {/* Profile Menu */}
           <div className="relative">
             <button
@@ -98,22 +95,23 @@ const Header = () => {
             </button>
 
             <div
-              className={`absolute right-0 top-full mt-2 w-52 bg-white rounded-lg shadow-lg py-2 z-50 ring-1 ring-black ring-opacity-5
-                         transform transition-all duration-200 ease-in-out origin-top-right
-                         ${
-                           isProfileMenuOpen
-                             ? "opacity-100 scale-100"
-                             : "opacity-0 scale-95 pointer-events-none"
-                         }`}
+              className={`absolute right-0 top-full mt-2 w-52 bg-[#faf9f7] rounded-lg shadow-lg py-2 z-50 ring-1 ring-black ring-opacity-5
+                transform transition-all duration-200 ease-in-out origin-top-right
+                ${
+                  isProfileMenuOpen
+                    ? "opacity-100 scale-100"
+                    : "opacity-0 scale-95 pointer-events-none"
+                }`}
             >
               {currentUser ? (
                 <>
                   <div className="px-4 py-2 text-sm text-gray-600 border-b truncate">
                     {currentUser.email}
                   </div>
+
                   <button
                     onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
                   >
                     Logout
                   </button>
@@ -122,13 +120,14 @@ const Header = () => {
                 <>
                   <Link
                     to="/login"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
                   >
                     Login
                   </Link>
+
                   <Link
                     to="/register"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
                   >
                     Register
                   </Link>
@@ -137,7 +136,7 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Hamburger Menu (Animated Icon) */}
+          {/* Hamburger Menu */}
           <button
             onClick={toggleNavMenu}
             className="relative w-8 h-8 flex flex-col justify-between items-center p-2 group"
@@ -158,10 +157,11 @@ const Header = () => {
               }`}
             />
           </button>
+
         </div>
       </div>
 
-      {/* --- Fullscreen Slide-in Drawer Menu --- */}
+      {/* Full Height Slide-In Menu */}
       <AnimatePresence>
         {isNavMenuOpen && (
           <motion.div
@@ -172,14 +172,14 @@ const Header = () => {
             onClick={closeMenus}
           >
             <motion.div
-              className="absolute top-0 right-0 h-full w-72 bg-white shadow-lg p-4"
+              className="fixed top-0 right-0 h-screen w-80 bg-[#faf9f7] shadow-xl p-6 overflow-y-auto"
               variants={sidebarVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between border-b pb-3 mb-6">
+              <div className="flex items-center justify-between border-b pb-4 mb-6">
                 <span className="text-lg font-bold text-gray-800">Menu</span>
               </div>
 
@@ -200,8 +200,8 @@ const Header = () => {
                         onClick={closeMenus}
                         className={`block px-4 py-3 rounded-md text-lg cursor-pointer ${
                           isActive(link.path)
-                            ? "font-bold bg-gray-100 text-black"
-                            : "text-gray-700 hover:bg-gray-100"
+                            ? "font-bold bg-gray-200 text-black"
+                            : "text-gray-700 hover:bg-gray-200"
                         }`}
                       >
                         {link.label}
@@ -214,8 +214,8 @@ const Header = () => {
                         onClick={closeMenus}
                         className={`block px-4 py-3 rounded-md text-lg ${
                           isActive(link.path)
-                            ? "font-bold bg-gray-100 text-black"
-                            : "text-gray-700 hover:bg-gray-100"
+                            ? "font-bold bg-gray-200 text-black"
+                            : "text-gray-700 hover:bg-gray-200"
                         }`}
                       >
                         {link.label}
@@ -224,10 +224,12 @@ const Header = () => {
                   )
                 )}
               </motion.nav>
+
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
     </header>
   );
 };
