@@ -86,7 +86,7 @@ const EXPLORE_CARDS = [
     desc: "Deep analysis of legislative changes and impacts.",
     img: "/hero-5.jpg",
     to: "#acts",
-    bgColor: "#bebfc2",
+    bgColor: "#FFD600.",
   },
 ];
 
@@ -291,7 +291,7 @@ const Home = () => {
             title: "Stay Informed",
             desc: "Get the latest news and updates about tax laws and policy changes.",
             to: "#news",
-            bg: "#bebfc2 ",
+            bg: "#FFD600. ",
             text: "text-black",
             btnStyle: "light",
             icon: <NewspaperIcon fontSize="large" className="mb-4 text-navy opacity-90" />,
