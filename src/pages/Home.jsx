@@ -291,7 +291,7 @@ const Home = () => {
             title: "Stay Informed",
             desc: "Get the latest news and updates about tax laws and policy changes.",
             to: "#news",
-            bg: "#FFD600. ",
+            bg: "#FFD600 ",
             text: "text-black",
             btnStyle: "light",
             icon: <NewspaperIcon fontSize="large" className="mb-4 text-navy opacity-90" />,
