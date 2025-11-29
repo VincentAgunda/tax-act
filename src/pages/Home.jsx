@@ -86,7 +86,7 @@ const EXPLORE_CARDS = [
     desc: "Deep analysis of legislative changes and impacts.",
     img: "/hero-5.jpg",
     to: "#acts",
-    bgColor: "#FFD600.",
+    bgColor: "#FFD600",
   },
 ];
 
