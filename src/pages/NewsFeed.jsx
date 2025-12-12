@@ -1,4 +1,3 @@
-// src/pages/NewsFeed.jsx
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import NewsCard from "../components/NewsCard";
@@ -31,7 +30,8 @@ const NewsFeed = ({ embedded = false }) => {
         const processedNews = data.map((item) => ({
           ...item,
           status: item.status || "Published",
-          version: item.version || "1.0.0",
+          // Changed 'version' to 'date', prioritizing created_at timestamp if available
+          date: item.created_at || new Date().toLocaleDateString(),
         }));
 
         setNews(processedNews);

@@ -1,11 +1,13 @@
+// src/pages/AdminDashboard.jsx
 import { supabase } from '../supabaseClient';
-import React, { useState, useEffect, memo } from "react";
+import React, { useState, useEffect, memo, useRef } from "react";
 import RichTextEditor from "../components/RichTextEditor";
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from "framer-motion";
+
+// Icons
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import NewspaperIcon from "@mui/icons-material/Newspaper";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
@@ -14,19 +16,20 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import HomeIcon from '@mui/icons-material/Home';
+import ArticleIcon from '@mui/icons-material/Article';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 
-// --- Reusable, Memoized Components for Performance ---
+// --- Reusable Components ---
 
 const fadeIn = {
-  hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
 };
 
 const NavButton = memo(({ active, onClick, icon, children }) => (
   <button onClick={onClick} className={`flex items-center w-full text-left px-4 py-3 rounded-md transition ${
-    active ? "bg-black text-white font-semibold" : "text-gray-800 hover:bg-gray-300"
+    active ? "bg-black text-white font-semibold shadow-md" : "text-gray-600 hover:bg-gray-200"
   }`}>
     {icon}
     {children}
@@ -34,243 +37,293 @@ const NavButton = memo(({ active, onClick, icon, children }) => (
 ));
 
 const FormInput = memo(({ label, error, ...props }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-    <input {...props} className={`block w-full p-3 bg-white border rounded-md focus:ring-2 focus:ring-gray-800 focus:border-transparent transition ${error ? "border-red-500" : "border-gray-300"}`} />
-    {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
-  </div>
-));
-
-const FormTextarea = memo(({ label, error, ...props }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-    <textarea {...props} className={`block w-full p-3 bg-white border rounded-md focus:ring-2 focus:ring-gray-800 focus:border-transparent transition ${error ? "border-red-500" : "border-gray-300"}`} />
-    {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+  <div className="w-full">
+    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">{label}</label>
+    <input {...props} className={`block w-full p-2.5 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition outline-none ${error ? "border-red-500" : "border-gray-300"}`} />
+    {error && <p className="mt-1 text-xs text-red-600 font-medium">{error}</p>}
   </div>
 ));
 
 const FormSelect = memo(({ label, error, children, ...props }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-    <select {...props} className={`block w-full p-3 bg-white border rounded-md focus:ring-2 focus:ring-gray-800 focus:border-transparent transition ${error ? "border-red-500" : "border-gray-300"}`}>
+  <div className="w-full">
+    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">{label}</label>
+    <select {...props} className={`block w-full p-2.5 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition outline-none ${error ? "border-red-500" : "border-gray-300"}`}>
       {children}
     </select>
-    {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+    {error && <p className="mt-1 text-xs text-red-600 font-medium">{error}</p>}
   </div>
 ));
 
-const FileUpload = memo(({ label, error, onChange, accept }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-      <input type="file" accept={accept} onChange={onChange} className={`block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-800 hover:file:bg-gray-200 transition ${error ? "border-red-500" : "border-gray-300"}`} />
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
-    </div>
-));
+// --- Chapter Manager Component (The Fixed Canvas) ---
+const ChapterManager = ({ chapters, setChapters, error }) => {
+    const [activeChapterIndex, setActiveChapterIndex] = useState(0);
+    const sidebarRef = useRef(null);
 
-const PdfCard = memo(({ pdf, onEdit, onDelete }) => {
-  const [showPreview, setShowPreview] = useState(false);
-  return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow">
-      <div className="p-4">
-        <div className="flex justify-between items-start mb-3">
-          <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{pdf.title}</h3>
-          <div className="flex space-x-2">
-            <button onClick={() => onEdit(pdf)} className="text-blue-600 hover:text-blue-800 transition p-1 rounded-full hover:bg-blue-50" aria-label="Edit"><EditIcon fontSize="small" /></button>
-            <button onClick={() => onDelete(pdf)} className="text-red-600 hover:text-red-800 transition p-1 rounded-full hover:bg-red-50" aria-label="Delete"><DeleteIcon fontSize="small" /></button>
-          </div>
-        </div>
-        <p className="text-gray-600 text-sm mb-2">{pdf.category} • {pdf.status} • v{pdf.version}</p>
-        <p className="text-gray-700 mb-4 line-clamp-2">{pdf.description}</p>
-        <div className="flex flex-wrap gap-2 mb-4">
-          <a href={pdf.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium px-3 py-1 bg-blue-50 rounded-full transition"><VisibilityIcon fontSize="small" className="mr-1" />View</a>
-          <button onClick={() => setShowPreview(!showPreview)} className="text-gray-600 hover:text-gray-800 text-sm font-medium px-3 py-1 bg-gray-100 rounded-full transition">{showPreview ? 'Hide Preview' : 'Show Preview'}</button>
-        </div>
-      </div>
-      {showPreview && (
-        <div className="border-t border-gray-200 p-4 bg-gray-50">
-          <iframe src={pdf.file_url} className="w-full h-64 rounded border border-gray-300" title={`Preview of ${pdf.title}`} />
-        </div>
-      )}
-    </motion.div>
-  );
-});
+    // Helper to safely get current chapter
+    const currentChapter = chapters[activeChapterIndex] || chapters[0];
 
+    const addChapter = () => {
+        const newChapter = { title: `Chapter ${chapters.length + 1}`, content: "" };
+        const newChapters = [...chapters, newChapter];
+        setChapters(newChapters);
+        // Switch to new chapter immediately
+        setActiveChapterIndex(newChapters.length - 1);
+    };
 
-// --- Tab-Specific UI Components ---
+    // Auto-scroll sidebar when a new chapter is added
+    useEffect(() => {
+        if (sidebarRef.current) {
+            sidebarRef.current.scrollTop = sidebarRef.current.scrollHeight;
+        }
+    }, [chapters.length]);
 
-const ActsManager = ({ formState, setFormState, errors, isEditing, loading, data, handleSubmit, handleEdit, handleDelete, resetForm }) => (
-    <div className="max-w-4xl mx-auto">
-      <motion.form key="acts-form" onSubmit={handleSubmit} initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8 space-y-6 mb-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{isEditing ? "Edit Act" : "Add New Act"}</h2>
-          {isEditing && (
-            <button type="button" onClick={resetForm} className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium transition">
-              <AddIcon className="mr-2" />Add New
-            </button>
-          )}
-        </div>
-        <FormInput label="Title" type="text" value={formState.title} error={errors.title} onChange={(e) => setFormState({ ...formState, title: e.target.value })} required />
-        <FormTextarea label="Description" rows="3" value={formState.description} error={errors.description} onChange={(e) => setFormState({ ...formState, description: e.target.value })} required />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-          <FormSelect label="Category" value={formState.category} error={errors.category} onChange={(e) => setFormState({ ...formState, category: e.target.value })} required>
-            <option value="">Select a category</option>
-            <option value="Income Tax">Income Tax</option>
-            <option value="Corporate Tax">Corporate Tax</option>
-            <option value="Property Tax">Property Tax</option>
-            <option value="Sales Tax">Sales Tax</option>
-          </FormSelect>
-          <FormSelect label="Status" value={formState.status} onChange={(e) => setFormState({ ...formState, status: e.target.value })} required>
-            <option value="Draft">Draft</option>
-            <option value="Active">Active</option>
-            <option value="Archived">Archived</option>
-          </FormSelect>
-          <FormInput label="Version" type="text" value={formState.version} onChange={(e) => setFormState({ ...formState, version: e.target.value })} required />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Content {errors.content && <span className="text-red-600">- {errors.content}</span>}</label>
-          <RichTextEditor value={formState.content} onChange={(content) => setFormState({ ...formState, content })} />
-        </div>
-        <button type="submit" disabled={loading} className="flex items-center justify-center bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-md font-semibold w-full md:w-auto transition disabled:opacity-70">
-          {loading ? <CircularProgress size={24} color="inherit" /> : <><SaveIcon className="mr-2" />{isEditing ? "Update Act" : "Add Act"}</>}
-        </button>
-      </motion.form>
-      <motion.div initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Existing Acts</h2>
-        {data.length === 0 && !loading ? <p className="text-gray-500 text-center py-8">No acts found. Add your first act above.</p> : (
-          <div className="space-y-4">
-            {data.map((act) => (
-              <div key={act.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
-                <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold">{act.title}</h3>
-                    <p className="text-gray-600 text-sm">{act.category} • {act.status} • v{act.version}</p>
-                    <p className="text-gray-700 mt-2 line-clamp-2">{act.description}</p>
-                  </div>
-                  <div className="flex space-x-2 self-end sm:self-auto">
-                    <button onClick={() => handleEdit(act)} className="text-blue-600 hover:text-blue-800 transition p-1" aria-label="Edit"><EditIcon /></button>
-                    <button onClick={() => handleDelete(act)} className="text-red-600 hover:text-red-800 transition p-1" aria-label="Delete"><DeleteIcon /></button>
-                  </div>
+    const removeChapter = (index) => {
+        if (chapters.length === 1) return alert("You must have at least one chapter.");
+        if (window.confirm("Delete this chapter?")) {
+            const updated = chapters.filter((_, i) => i !== index);
+            setChapters(updated);
+            // Adjust index to prevent crash if deleting the currently active one
+            setActiveChapterIndex(prev => (index === prev ? Math.max(0, index - 1) : prev > index ? prev - 1 : prev));
+        }
+    };
+
+    const updateChapter = (key, value) => {
+        const updated = [...chapters];
+        updated[activeChapterIndex] = { ...updated[activeChapterIndex], [key]: value };
+        setChapters(updated);
+    };
+
+    return (
+        <div className="border border-gray-300 rounded-xl overflow-hidden bg-white shadow-sm mt-4 flex flex-col h-[600px]">
+            {/* Header */}
+            <div className="bg-gray-100 p-3 border-b border-gray-300 flex items-center justify-between flex-shrink-0">
+                <h3 className="font-bold text-gray-700 flex items-center gap-2">
+                    <ArticleIcon /> Act Content ({chapters.length} Pages)
+                </h3>
+                <button type="button" onClick={addChapter} className="text-xs bg-black text-white px-3 py-1.5 rounded hover:bg-gray-800 transition flex items-center gap-1">
+                    <AddIcon fontSize="small"/> Add Page
+                </button>
+            </div>
+            
+            <div className="flex flex-1 overflow-hidden">
+                {/* Left: Chapter List - scrollable */}
+                <div className="w-64 bg-gray-50 border-r border-gray-200 flex-col flex flex-shrink-0">
+                    <div className="p-2 text-xs font-bold text-gray-400 uppercase bg-gray-100 border-b border-gray-200">Page Navigation</div>
+                    <div ref={sidebarRef} className="overflow-y-auto flex-1 p-2 space-y-1">
+                        {chapters.map((chap, idx) => (
+                            <div 
+                                key={idx} 
+                                onClick={() => setActiveChapterIndex(idx)}
+                                className={`group flex items-center gap-2 p-3 rounded-lg cursor-pointer transition border ${
+                                    activeChapterIndex === idx 
+                                    ? "bg-black text-white border-black shadow-md" 
+                                    : "bg-white text-gray-600 border-transparent hover:bg-gray-200"
+                                }`} 
+                            >
+                                <span className={`font-mono text-xs ${activeChapterIndex === idx ? "opacity-50" : "text-gray-400"}`}>{idx + 1}</span>
+                                <span className="text-sm truncate flex-1 font-medium">
+                                    {chap.title || "Untitled Page"}
+                                </span>
+                                <button 
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); removeChapter(idx); }}
+                                    className={`p-1 rounded opacity-0 group-hover:opacity-100 transition ${
+                                        activeChapterIndex === idx ? "hover:bg-gray-700 text-white" : "hover:bg-red-100 text-red-500"
+                                    }`}
+                                >
+                                    <CloseIcon style={{ fontSize: 14 }}/>
+                                </button>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </motion.div>
-    </div>
-);
 
+                {/* Right: Canvas Editor */}
+                <div className="flex-1 bg-white overflow-y-auto p-6 relative">
+                    {currentChapter ? (
+                        /* IMPORTANT: The 'key' prop here forces React to remount the inputs when changing pages.
+                           This ensures the input fields clear out or populate correctly for the new page. */
+                        <div key={activeChapterIndex} className="space-y-4 animate-fadeIn max-w-4xl mx-auto">
+                             <div className="flex items-center justify-between mb-2 border-b border-gray-100 pb-2">
+                                <span className="text-xs font-bold text-gray-400 uppercase">Currently Editing Page {activeChapterIndex + 1}</span>
+                             </div>
+
+                             <FormInput 
+                                label="Page Title" 
+                                value={currentChapter.title} 
+                                onChange={(e) => updateChapter('title', e.target.value)}
+                                placeholder="e.g. Preliminary Provisions"
+                                autoFocus={true} 
+                            />
+                            
+                            <div className="h-full flex flex-col">
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Page Content</label>
+                                <RichTextEditor 
+                                    value={currentChapter.content} 
+                                    onChange={(val) => updateChapter('content', val)} 
+                                />
+                                {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-gray-400">
+                            Select a page to edit
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- Form Managers ---
+
+const ActsManager = ({ formState, setFormState, errors, isEditing, loading, data, handleSubmit, handleEdit, handleDelete, resetForm }) => {
+    // Local state for chapters array. Syncs with formState.content on change.
+    const [chapters, setChapters] = useState([{ title: "Chapter 1", content: "" }]);
+
+    // When editing an act, parse the content string back into JSON array
+    useEffect(() => {
+        if (formState.content) {
+            try {
+                const parsed = JSON.parse(formState.content);
+                if (Array.isArray(parsed)) setChapters(parsed);
+                else setChapters([{ title: "Main Content", content: formState.content }]);
+            } catch (e) {
+                // If standard string (legacy data)
+                if (formState.content.length > 0) {
+                     setChapters([{ title: "Main Content", content: formState.content }]);
+                } else {
+                     setChapters([{ title: "Chapter 1", content: "" }]);
+                }
+            }
+        } else {
+            // Reset
+            if (!isEditing) setChapters([{ title: "Chapter 1", content: "" }]);
+        }
+    }, [formState.id, isEditing]); // Trigger on ID change (new selection)
+
+    // Sync local chapters to formState string before submit
+    const onSubmitProxy = (e) => {
+        e.preventDefault();
+        const contentString = JSON.stringify(chapters);
+        // We manually inject the stringified chapters into the submit handler
+        const syntheticEvent = { ...e, preventDefault: () => {} }; 
+        handleSubmit(syntheticEvent, contentString);
+    };
+
+    return (
+      <div className="bg-[#f5f5f7] min-h-full pb-10">
+        <motion.div initial="hidden" animate="visible" variants={fadeIn} className="max-w-6xl mx-auto space-y-8">
+            
+            {/* Form Section */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                     <h2 className="text-xl font-bold text-gray-800">{isEditing ? "Edit Act" : "Create New Act"}</h2>
+                     {isEditing && (
+                        <button type="button" onClick={() => { resetForm(); setChapters([{ title: "Chapter 1", content: "" }]); }} className="text-sm text-gray-600 hover:text-black flex items-center gap-1">
+                            <AddIcon fontSize="small"/> New
+                        </button>
+                     )}
+                </div>
+                
+                <form onSubmit={(e) => onSubmitProxy(e)} className="p-6 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormInput label="Act Title" value={formState.title} error={errors.title} onChange={(e) => setFormState({ ...formState, title: e.target.value })} required />
+                        <FormInput label="Act Year" type="number" value={formState.year} onChange={(e) => setFormState({ ...formState, year: e.target.value })} required />
+                    </div>
+                    
+                    <FormInput label="Short Description" value={formState.description} error={errors.description} onChange={(e) => setFormState({ ...formState, description: e.target.value })} required />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormSelect label="Category" value={formState.category} error={errors.category} onChange={(e) => setFormState({ ...formState, category: e.target.value })} required>
+                            <option value="">Select...</option>
+                            <option value="Income Tax">Income Tax</option>
+                            <option value="Corporate Tax">Corporate Tax</option>
+                            <option value="Property Tax">Property Tax</option>
+                            <option value="Sales Tax">Sales Tax</option>
+                        </FormSelect>
+                        <FormSelect label="Status" value={formState.status} onChange={(e) => setFormState({ ...formState, status: e.target.value })} required>
+                            <option value="Draft">Draft</option>
+                            <option value="Active">Active</option>
+                            <option value="Archived">Archived</option>
+                        </FormSelect>
+                    </div>
+
+                    {/* The New Chapter Manager */}
+                    <ChapterManager chapters={chapters} setChapters={setChapters} error={errors.content} />
+
+                    <div className="pt-4">
+                        <button type="submit" disabled={loading} className="w-full md:w-auto bg-black text-white px-8 py-3 rounded-lg font-bold hover:bg-gray-800 transition flex items-center justify-center gap-2 shadow-lg shadow-gray-400/20">
+                            {loading ? <CircularProgress size={20} color="inherit" /> : <><SaveIcon fontSize="small"/> {isEditing ? "Save Changes" : "Publish Act"}</>}
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {/* List Section */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                 <h2 className="text-lg font-bold text-gray-800 mb-4">Act Library</h2>
+                 {data.length === 0 ? <div className="text-center py-10 text-gray-400">No acts found</div> : (
+                     <div className="grid grid-cols-1 gap-3">
+                         {data.map((act) => (
+                             <div key={act.id} className="flex items-center justify-between p-4 rounded-lg border border-gray-100 hover:border-gray-300 hover:shadow-sm transition bg-white">
+                                 <div>
+                                     <h3 className="font-bold text-gray-800">{act.title}</h3>
+                                     <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                                         <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-600">{act.year}</span>
+                                         <span>{act.category}</span>
+                                         <span className={`px-2 py-0.5 rounded ${act.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>{act.status}</span>
+                                     </div>
+                                 </div>
+                                 <div className="flex items-center gap-2">
+                                     <button onClick={() => handleEdit(act)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition"><EditIcon fontSize="small"/></button>
+                                     <button onClick={() => handleDelete(act)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition"><DeleteIcon fontSize="small"/></button>
+                                 </div>
+                             </div>
+                         ))}
+                     </div>
+                 )}
+            </div>
+        </motion.div>
+      </div>
+    );
+};
+
+// --- News Manager (Kept simple, no chapters needed) ---
 const NewsManager = ({ formState, setFormState, errors, isEditing, loading, data, handleSubmit, handleEdit, handleDelete, resetForm }) => (
-    <div className="max-w-4xl mx-auto">
-      <motion.form key="news-form" onSubmit={handleSubmit} initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8 space-y-6 mb-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{isEditing ? "Edit News Article" : "Add News Article"}</h2>
-              {isEditing && (
-                  <button type="button" onClick={resetForm} className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium transition">
-                      <AddIcon className="mr-2" />Add New
-                  </button>
-              )}
-          </div>
-          <FormInput label="Title" type="text" value={formState.title} error={errors.title} onChange={(e) => setFormState({ ...formState, title: e.target.value })} required />
-          <FormTextarea label="Description" rows="3" value={formState.description} error={errors.description} onChange={(e) => setFormState({ ...formState, description: e.target.value })} required />
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-              <FormSelect label="Category" value={formState.category} error={errors.category} onChange={(e) => setFormState({ ...formState, category: e.target.value })} required>
-                  <option value="">Select a category</option>
-                  <option value="Tax News">Tax News</option>
-                  <option value="Legislation Update">Legislation Update</option>
-                  <option value="Event">Event</option>
-                  <option value="General">General</option>
-              </FormSelect>
-              <FormSelect label="Status" value={formState.status} onChange={(e) => setFormState({ ...formState, status: e.target.value })} required>
-                  <option value="Draft">Draft</option>
-                  <option value="Published">Published</option>
-                  <option value="Archived">Archived</option>
-              </FormSelect>
-              <FormInput label="Version" type="text" value={formState.version} onChange={(e) => setFormState({ ...formState, version: e.target.value })} required />
-          </div>
-          <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Content {errors.content && <span className="text-red-600">- {errors.content}</span>}</label>
-              <RichTextEditor value={formState.content} onChange={(content) => setFormState({ ...formState, content })} />
-          </div>
-          <button type="submit" disabled={loading} className="flex items-center justify-center bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-md font-semibold w-full md:w-auto transition disabled:opacity-70">
-              {loading ? <CircularProgress size={24} color="inherit" /> : <><SaveIcon className="mr-2" />{isEditing ? "Update News" : "Add News"}</>}
-          </button>
-      </motion.form>
-      <motion.div initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Existing News Articles</h2>
-          {data.length === 0 && !loading ? <p className="text-gray-500 text-center py-8">No news articles found.</p> : (
-              <div className="space-y-4">
-                  {data.map((newsItem) => (
-                      <div key={newsItem.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
-                          <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
-                              <div className="flex-1">
-                                  <h3 className="text-lg font-semibold">{newsItem.title}</h3>
-                                  <p className="text-gray-600 text-sm">{newsItem.category} • {newsItem.status} • v{newsItem.version}</p>
-                                  <p className="text-gray-700 mt-2 line-clamp-2">{newsItem.description}</p>
-                              </div>
-                              <div className="flex space-x-2 self-end sm:self-auto">
-                                  <button onClick={() => handleEdit(newsItem)} className="text-blue-600 hover:text-blue-800 transition p-1" aria-label="Edit"><EditIcon /></button>
-                                  <button onClick={() => handleDelete(newsItem)} className="text-red-600 hover:text-red-800 transition p-1" aria-label="Delete"><DeleteIcon /></button>
-                              </div>
-                          </div>
-                      </div>
-                  ))}
-              </div>
-          )}
-      </motion.div>
+    <div className="bg-[#f5f5f7] min-h-full pb-10">
+        <motion.form key="news-form" onSubmit={(e) => handleSubmit(e)} initial="hidden" animate="visible" variants={fadeIn} className="max-w-6xl mx-auto space-y-8">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
+                <div className="flex justify-between items-center border-b border-gray-100 pb-4">
+                    <h2 className="text-xl font-bold text-gray-800">{isEditing ? "Edit News" : "Add News"}</h2>
+                    {isEditing && <button type="button" onClick={resetForm} className="text-sm flex items-center gap-1"><AddIcon fontSize="small"/> New</button>}
+                </div>
+                
+                <FormInput label="Title" value={formState.title} error={errors.title} onChange={(e) => setFormState({ ...formState, title: e.target.value })} required />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                     <FormSelect label="Category" value={formState.category} onChange={(e) => setFormState({ ...formState, category: e.target.value })} required>
+                        <option value="General">General</option>
+                        <option value="Tax News">Tax News</option>
+                        <option value="Event">Event</option>
+                     </FormSelect>
+                     <FormSelect label="Status" value={formState.status} onChange={(e) => setFormState({ ...formState, status: e.target.value })} required>
+                        <option value="Draft">Draft</option>
+                        <option value="Published">Published</option>
+                     </FormSelect>
+                     <FormInput label="Year" type="number" value={formState.year} onChange={(e) => setFormState({ ...formState, year: e.target.value })} />
+                </div>
+                <div>
+                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Content</label>
+                     <RichTextEditor value={formState.content} onChange={(c) => setFormState({ ...formState, content: c })} />
+                </div>
+                <button type="submit" disabled={loading} className="bg-black text-white px-6 py-2 rounded-lg font-bold hover:bg-gray-800">{loading ? "Saving..." : "Save News"}</button>
+            </div>
+        </motion.form>
     </div>
 );
 
-const PdfsManager = ({ formState, setFormState, errors, isEditing, loading, data, handleSubmit, handleEdit, handleDelete, resetForm, handleFileChange }) => (
-    <div className="max-w-6xl mx-auto">
-      <motion.form key="pdfs-form" onSubmit={handleSubmit} initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8 space-y-6 mb-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{isEditing ? "Edit PDF" : "Add New PDF"}</h2>
-          {isEditing && (
-            <button type="button" onClick={resetForm} className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium transition">
-              <AddIcon className="mr-2" />Add New
-            </button>
-          )}
-        </div>
-        <FormInput label="Title" type="text" value={formState.title} error={errors.title} onChange={(e) => setFormState({ ...formState, title: e.target.value })} required />
-        <FormTextarea label="Description" rows="3" value={formState.description} error={errors.description} onChange={(e) => setFormState({ ...formState, description: e.target.value })} required />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-          <FormSelect label="Category" value={formState.category} error={errors.category} onChange={(e) => setFormState({ ...formState, category: e.target.value })} required>
-            <option value="">Select a category</option>
-            <option value="Income Tax">Income Tax</option>
-            <option value="Corporate Tax">Corporate Tax</option>
-            <option value="Property Tax">Property Tax</option>
-            <option value="Sales Tax">Sales Tax</option>
-          </FormSelect>
-          <FormSelect label="Status" value={formState.status} onChange={(e) => setFormState({ ...formState, status: e.target.value })} required>
-            <option value="Draft">Draft</option>
-            <option value="Active">Active</option>
-            <option value="Archived">Archived</option>
-          </FormSelect>
-          <FormInput label="Version" type="text" value={formState.version} onChange={(e) => setFormState({ ...formState, version: e.target.value })} required />
-        </div>
-        <FileUpload label="PDF File" accept=".pdf" error={errors.file} onChange={handleFileChange} />
-        {isEditing && formState.file_url && (
-          <div className="mt-2"><p className="text-sm text-gray-600">Current file: <a href={formState.file_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-blue-600 hover:underline">View PDF</a></p></div>
-        )}
-        <button type="submit" disabled={loading} className="flex items-center justify-center bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-md font-semibold w-full md:w-auto transition disabled:opacity-70">
-          {loading ? <CircularProgress size={24} color="inherit" /> : <><SaveIcon className="mr-2" />{isEditing ? "Update PDF" : "Add PDF"}</>}
-        </button>
-      </motion.form>
-      <motion.div initial="hidden" animate="visible" variants={fadeIn} className="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6">Existing PDFs</h2>
-        {data.length === 0 && !loading ? <p className="text-gray-500 text-center py-8">No PDFs found.</p> : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            {data.map((pdf) => (
-              <PdfCard key={pdf.id} pdf={pdf} onEdit={handleEdit} onDelete={handleDelete} />
-            ))}
-          </div>
-        )}
-      </motion.div>
-    </div>
-);
-
-
-// --- Main Dashboard Component ---
+// --- Main Dashboard Container ---
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("acts");
@@ -280,266 +333,135 @@ const AdminDashboard = () => {
 
   const [acts, setActs] = useState([]);
   const [news, setNews] = useState([]);
-  const [pdfs, setPdfs] = useState([]);
 
   const [isEditing, setIsEditing] = useState(false);
   const [currentEditId, setCurrentEditId] = useState(null);
 
-  const [actForm, setActForm] = useState({ title: "", description: "", content: "", category: "", status: "Draft", version: "1.0.0" });
-  const [newsForm, setNewsForm] = useState({ title: "", description: "", content: "", category: "General", status: "Draft", version: "1.0.0" });
-  const [pdfForm, setPdfForm] = useState({ title: "", description: "", category: "", status: "Draft", version: "1.0.0", file: null });
-  const [errors, setErrors] = useState({ act: {}, news: {}, pdf: {} });
+  const [actForm, setActForm] = useState({ title: "", description: "", content: "", category: "", status: "Draft", year: new Date().getFullYear().toString() });
+  const [newsForm, setNewsForm] = useState({ title: "", description: "", content: "", category: "General", status: "Draft", year: new Date().getFullYear().toString() });
+  const [errors, setErrors] = useState({ act: {}, news: {} });
 
-  useEffect(() => {
-    fetchData();
-  }, [activeTab]);
+  useEffect(() => { fetchData(); }, [activeTab]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      // --- FIX APPLIED HERE ---
-      const tableName = activeTab; // "acts", "news", or "pdfs" - This is correct as activeTab holds the correct table name.
+      const tableName = activeTab;
       const { data, error } = await supabase.from(tableName).select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      if (tableName === "acts") setActs(data);
-      if (tableName === "news") setNews(data);
-      if (tableName === "pdfs") setPdfs(data);
+      if (tableName === "acts") setActs(data || []);
+      if (tableName === "news") setNews(data || []);
     } catch (error) {
-      console.error("Error fetching data:", error);
-      setMessage({ type: "error", text: `Error fetching ${activeTab}: ${error.message}` });
+      setMessage({ type: "error", text: error.message });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const uploadFileToSupabase = async (file) => {
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-      const { error: uploadError } = await supabase.storage.from('pdfs').upload(filePath, file);
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from('pdfs').getPublicUrl(filePath);
-      return publicUrl;
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      setMessage({ type: "error", text: error.message || "Error uploading file." });
-      throw error;
-    }
-  };
-
-  const deleteFileFromSupabase = async (fileUrl) => {
-    try {
-      const filePath = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
-      const { error } = await supabase.storage.from('pdfs').remove([filePath]);
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error deleting file:', error);
-      setMessage({ type: "error", text: "Error deleting file." });
-      throw error;
     }
   };
 
   const validateForm = (form, type) => {
-    const newErrors = {};
-    if (!form.title.trim()) newErrors.title = "Title is required";
-    if (!form.description.trim()) newErrors.description = "Description is required";
-    if (!form.category) newErrors.category = "Category is required";
-    if ((type === 'act' || type === 'news') && (!form.content.trim() || form.content === "<p><br></p>")) newErrors.content = "Content is required";
-    if (type === 'pdf' && !form.file && !isEditing) newErrors.file = "PDF file is required";
-    setErrors(prev => ({ ...prev, [type]: newErrors }));
-    return Object.keys(newErrors).length === 0;
+      // Basic validation logic
+      const errs = {};
+      if(!form.title) errs.title = "Required";
+      setErrors(prev => ({...prev, [type]: errs}));
+      return Object.keys(errs).length === 0;
   };
 
   const resetForms = () => {
-    setActForm({ title: "", description: "", content: "", category: "", status: "Draft", version: "1.0.0" });
-    setNewsForm({ title: "", description: "", content: "", category: "General", status: "Draft", version: "1.0.0" });
-    setPdfForm({ title: "", description: "", category: "", status: "Draft", version: "1.0.0", file: null });
+    setActForm({ title: "", description: "", content: "", category: "", status: "Draft", year: new Date().getFullYear().toString() });
+    setNewsForm({ title: "", description: "", content: "", category: "General", status: "Draft", year: new Date().getFullYear().toString() });
     setIsEditing(false);
     setCurrentEditId(null);
-    setErrors({ act: {}, news: {}, pdf: {} });
   };
 
-  const handleGenericSubmit = async (form, type, dataProcessor = (d) => d) => {
+  // Wrapper for generic submit, now accepts optional overridden content (for Acts JSON)
+  const handleGenericSubmit = async (e, form, type, overrideContent = null) => {
+    if(e) e.preventDefault();
     if (!validateForm(form, type)) return;
+    
     setLoading(true);
     try {
-      const processedData = await dataProcessor(form);
-      
-      // --- FIX APPLIED HERE ---
-      let tableName;
-      if (type === 'news') {
-        tableName = 'news'; // Use 'news' directly
-      } else {
-        tableName = `${type}s`; // Add 's' for 'act' and 'pdf'
-      }
+      const processedData = { ...form };
+      if (overrideContent) processedData.content = overrideContent;
 
+      const tableName = type === 'news' ? 'news' : `${type}s`;
       const { error } = isEditing
         ? await supabase.from(tableName).update(processedData).eq('id', currentEditId)
         : await supabase.from(tableName).insert([processedData]);
+
       if (error) throw error;
-      setMessage({ type: "success", text: `${type.charAt(0).toUpperCase() + type.slice(1)} ${isEditing ? 'updated' : 'added'} successfully!` });
+      setMessage({ type: "success", text: "Saved successfully!" });
       resetForms();
       fetchData();
     } catch (error) {
-      console.error(`Error saving ${type}:`, error);
-      setMessage({ type: "error", text: `Error saving ${type}: ${error.message}` });
+      setMessage({ type: "error", text: error.message });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleActSubmit = (e) => { e.preventDefault(); handleGenericSubmit(actForm, 'act'); };
-  const handleNewsSubmit = (e) => { e.preventDefault(); handleGenericSubmit(newsForm, 'news'); };
-  const handlePdfSubmit = async (e) => {
-    e.preventDefault();
-    handleGenericSubmit(pdfForm, 'pdf', async (formData) => {
-      let fileUrl = formData.file_url;
-      if (formData.file) {
-        if (isEditing && formData.file_url) await deleteFileFromSupabase(formData.file_url);
-        fileUrl = await uploadFileToSupabase(formData.file);
-      }
-      const { file, ...dbData } = formData;
-      return { ...dbData, file_url: fileUrl };
-    });
-  };
-
-  const handleEdit = (item, type) => {
-    if (type === 'act') setActForm(item);
-    else if (type === 'news') setNewsForm(item);
-    else if (type === 'pdf') setPdfForm({ ...item, file: null });
-    setIsEditing(true);
-    setCurrentEditId(item.id);
-    window.scrollTo(0, 0);
-  };
-
-  const handleDelete = async (item, type) => {
-    if (window.confirm(`Are you sure you want to delete this ${type}?`)) {
-      setLoading(true);
-      try {
-        if (type === 'pdf' && item.file_url) await deleteFileFromSupabase(item.file_url);
-
-        // --- FIX APPLIED HERE ---
-        let tableName;
-        if (type === 'news') {
-          tableName = 'news'; // Use 'news' directly
-        } else {
-          tableName = `${type}s`; // Add 's' for 'act' and 'pdf'
-        }
-
-        const { error } = await supabase.from(tableName).delete().eq('id', item.id);
-        if (error) throw error;
-        setMessage({ type: "success", text: `${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully!` });
-        fetchData();
-      } catch (error) {
-        console.error(`Error deleting ${type}:`, error);
-        setMessage({ type: "error", text: `Error deleting ${type}: ${error.message}` });
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type === 'application/pdf') {
-      setPdfForm({ ...pdfForm, file });
-      setErrors(prev => ({ ...prev, pdf: { ...prev.pdf, file: null } }));
-    } else {
-      setErrors(prev => ({ ...prev, pdf: { ...prev.pdf, file: "Please select a valid PDF file" } }));
-    }
-  };
-
-  const SidebarContent = () => (
-    <>
-      <h1 className="text-2xl font-bold mb-10 text-center text-black">Admin Panel</h1>
-      <nav className="flex flex-col space-y-3">
-        <Link to="/" className="flex items-center w-full text-left px-4 py-3 rounded-md transition text-gray-800 hover:bg-gray-300">
-          <HomeIcon className="mr-3" /> Go to Homepage
-        </Link>
-        <hr className="my-2 border-gray-400" />
-        <NavButton active={activeTab === "acts"} onClick={() => { setActiveTab("acts"); setSidebarOpen(false); resetForms(); }} icon={<MenuBookIcon className="mr-3" />}>Manage Acts</NavButton>
-        <NavButton active={activeTab === "news"} onClick={() => { setActiveTab("news"); setSidebarOpen(false); resetForms(); }} icon={<NewspaperIcon className="mr-3" />}>Manage News</NavButton>
-        <NavButton active={activeTab === "pdfs"} onClick={() => { setActiveTab("pdfs"); setSidebarOpen(false); resetForms(); }} icon={<PictureAsPdfIcon className="mr-3" />}>Manage PDFs</NavButton>
-      </nav>
-    </>
-  );
-
   return (
-    <div className="flex min-h-screen bg-gray-50 text-black relative">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 bg-[#DDDDDD] text-black flex-col py-8 px-4 shadow-lg">
-        <SidebarContent />
+    <div className="flex h-screen bg-gray-100 overflow-hidden font-sans text-gray-900">
+      
+      {/* Sidebar */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out`}>
+        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+             <h1 className="text-xl font-extrabold tracking-tight">Admin<span className="text-gray-400">Panel</span></h1>
+             <button onClick={() => setSidebarOpen(false)} className="md:hidden"><CloseIcon /></button>
+        </div>
+        <nav className="p-4 space-y-2">
+            <Link to="/" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-md transition mb-4"><HomeIcon className="mr-3 text-gray-400"/> Homepage</Link>
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider px-4 mb-2">Content</div>
+            <NavButton active={activeTab === "acts"} onClick={() => {setActiveTab("acts"); setSidebarOpen(false);}} icon={<MenuBookIcon className="mr-3"/>}>Acts</NavButton>
+            <NavButton active={activeTab === "news"} onClick={() => {setActiveTab("news"); setSidebarOpen(false);}} icon={<NewspaperIcon className="mr-3"/>}>News</NavButton>
+        </nav>
       </aside>
-      
-      {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-gray-800 text-white flex items-center justify-between px-4 py-4 shadow-lg z-50">
-        <h1 className="text-xl font-bold">Admin Panel</h1>
-        <button onClick={() => setSidebarOpen(true)} aria-label="Open menu" className="p-2 bg-white text-gray-800 rounded-md shadow-sm hover:bg-gray-100 transition"><MenuIcon /></button>
-      </div>
 
-      {/* Animated Mobile Sidebar */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <div className="fixed inset-0 z-40 flex md:hidden">
-            <motion.div
-              key="backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="fixed inset-0 bg-black/60"
-              onClick={() => setSidebarOpen(false)}
-            />
-            <motion.aside
-              key="sidebar"
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="relative w-64 bg-[#DDDDDD] text-black flex flex-col py-8 px-4 shadow-lg z-50"
-            >
-              <button className="absolute top-4 right-4 p-1 bg-gray-200 rounded-full" onClick={() => setSidebarOpen(false)} aria-label="Close menu"><CloseIcon /></button>
-              <SidebarContent />
-            </motion.aside>
-          </div>
-        )}
-      </AnimatePresence>
-      
-      {/* Main Content */}
-      <main className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto w-full mt-16 md:mt-0">
-        {message.text && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 max-w-6xl mx-auto">
-            <Alert severity={message.type} onClose={() => setMessage({ type: "", text: "" })}>{message.text}</Alert>
-          </motion.div>
-        )}
-        {activeTab === "acts" && (
-          <ActsManager
-            formState={actForm} setFormState={setActForm} errors={errors.act} isEditing={isEditing} loading={loading}
-            data={acts} handleSubmit={handleActSubmit}
-            handleEdit={(item) => handleEdit(item, 'act')}
-            handleDelete={(item) => handleDelete(item, 'act')}
-            resetForm={resetForms}
-          />
-        )}
-        {activeTab === "news" && (
-          <NewsManager
-            formState={newsForm} setFormState={setNewsForm} errors={errors.news} isEditing={isEditing} loading={loading}
-            data={news} handleSubmit={handleNewsSubmit}
-            handleEdit={(item) => handleEdit(item, 'news')}
-            handleDelete={(item) => handleDelete(item, 'news')}
-            resetForm={resetForms}
-          />
-        )}
-        {activeTab === "pdfs" && (
-          <PdfsManager
-            formState={pdfForm} setFormState={setPdfForm} errors={errors.pdf} isEditing={isEditing} loading={loading}
-            data={pdfs} handleSubmit={handlePdfSubmit}
-            handleEdit={(item) => handleEdit(item, 'pdf')}
-            handleDelete={(item) => handleDelete(item, 'pdf')}
-            resetForm={resetForms} handleFileChange={handleFileChange}
-          />
-        )}
+      {/* Main Area */}
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+        {/* Mobile Header */}
+        <div className="md:hidden bg-white border-b border-gray-200 p-4 flex items-center gap-3">
+             <button onClick={() => setSidebarOpen(true)}><MenuIcon /></button>
+             <span className="font-bold">Dashboard</span>
+        </div>
+
+        {/* Content Scroll Area */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8">
+            {message.text && (
+                <div className="fixed top-4 right-4 z-50 animate-bounce">
+                    <Alert severity={message.type} onClose={() => setMessage({ type: "", text: "" })}>{message.text}</Alert>
+                </div>
+            )}
+
+            {activeTab === "acts" ? (
+                <ActsManager 
+                    formState={actForm} setFormState={setActForm} errors={errors.act} 
+                    isEditing={isEditing} loading={loading} data={acts} 
+                    handleSubmit={(e, contentStr) => handleGenericSubmit(e, actForm, 'act', contentStr)} 
+                    handleEdit={(item) => { setActForm(item); setIsEditing(true); setCurrentEditId(item.id); }}
+                    handleDelete={async (item) => { 
+                        if(confirm("Delete?")) {
+                            await supabase.from('acts').delete().eq('id', item.id);
+                            fetchData();
+                        }
+                    }}
+                    resetForm={resetForms}
+                />
+            ) : (
+                <NewsManager 
+                    formState={newsForm} setFormState={setNewsForm} errors={errors.news}
+                    isEditing={isEditing} loading={loading} data={news}
+                    handleSubmit={(e) => handleGenericSubmit(e, newsForm, 'news')}
+                    handleEdit={(item) => { setNewsForm(item); setIsEditing(true); setCurrentEditId(item.id); }}
+                    handleDelete={async (item) => { 
+                        if(confirm("Delete?")) {
+                            await supabase.from('news').delete().eq('id', item.id);
+                            fetchData();
+                        }
+                    }}
+                    resetForm={resetForms}
+                />
+            )}
+        </div>
       </main>
     </div>
   );

@@ -225,7 +225,7 @@ export const PulsingDots = ({ count = 3, size = 'md' }) => {
 };
 
 // Advanced loading spinner
-export const FuturisticSpinner = ({ size = 40, primaryColor = '#3B82F6' }) => (
+export const FuturisticSpinner = ({ size = 40, primaryColor = '#f5f5f7' }) => (
   <div className="flex items-center justify-center p-4">
     <div className="relative" style={{ width: size, height: size }}>
       {/* Outer rotating ring */}
@@ -307,7 +307,7 @@ export const AnimatedProgressBar = ({
   progress = 0, 
   className = '',
   showLabel = true,
-  color = '#3B82F6' 
+  color = '#f5f5f7' 
 }) => (
   <div className={`w-full ${className}`}>
     {showLabel && (

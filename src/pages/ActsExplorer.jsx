@@ -1,334 +1,340 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { getAllActs, getAllPDFs } from "../utils/supabaseUtils";
+import { getAllActs } from "../utils/supabaseUtils";
 import ActCard from "../components/ActCard";
 import SearchFilter from "../components/SearchFilter";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import AddIcon from "@mui/icons-material/Add";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import { useNavigate } from "react-router-dom";
 
-// 🔹 Apple-style Bouncy Fade & Drop Variant
-const bouncyDrop = {
-  hidden: { opacity: 0, y: 60, scale: 0.95 },
-  visible: (i = 1) => ({
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 160,
-      damping: 15,
-      delay: i * 0.1,
-      mass: 0.8,
-      restDelta: 0.001,
-    },
-  }),
-};
+/**
+ * ActsExplorer Refactored
+ * - Split-pane layout (Sidebar + Main Content)
+ * - Mobile responsive drawer
+ * - Sticky headers
+ */
 
-// ✅ Memoized PDF Card with Animated Preview
-const PdfCard = React.memo(({ pdf, index }) => {
-  const [showPreview, setShowPreview] = useState(false);
-
-  return (
-    <motion.div
-      custom={index}
-      variants={bouncyDrop}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.2 }}
-      whileHover={{
-        scale: 1.04,
-        boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
-      }}
-      transition={{ type: "spring", stiffness: 200, damping: 18 }}
-      className="relative bg-gradient-to-br from-white via-[#fafafa] to-[#f3f3f4]
-                 rounded-2xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-all duration-300"
-    >
-      <h3 className="text-lg font-semibold text-gray-800 mb-2">{pdf.title}</h3>
-      <p className="text-gray-600 text-sm mb-4 line-clamp-3">{pdf.description}</p>
-
-      <div className="flex justify-between items-center mb-4 text-xs text-gray-500">
-        <span>Version: {pdf.version}</span>
-        <span>{pdf.status}</span>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <a
-          href={pdf.file_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center px-3 py-1 rounded-md text-sm font-medium 
-                     bg-white/80 text-gray-800 shadow-sm hover:bg-white transition"
-        >
-          <VisibilityIcon fontSize="small" className="mr-1" />
-          View
-        </a>
-
-        <button
-          onClick={() => setShowPreview(!showPreview)}
-          className="px-3 py-1 rounded-md text-sm font-medium 
-                     bg-gray-100/80 text-gray-700 hover:bg-gray-200 transition shadow-sm"
-        >
-          {showPreview ? "Hide Preview" : "Show Preview"}
-        </button>
-      </div>
-
-      {showPreview && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          className="mt-4 border-t border-gray-200 pt-4"
-        >
-          <iframe
-            src={pdf.file_url}
-            className="w-full h-64 rounded-lg border border-gray-300"
-            title={`Preview of ${pdf.title}`}
-          />
-        </motion.div>
-      )}
-
-      {/* Floating Add Button */}
-      <motion.div
-        whileHover={{ rotate: 90, scale: 1.15 }}
-        transition={{ type: "spring", stiffness: 250, damping: 12 }}
-        className="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-black 
-                   flex items-center justify-center shadow-lg cursor-pointer"
-      >
-        <AddIcon className="text-white text-lg" />
-      </motion.div>
-    </motion.div>
-  );
-});
-
-// ✅ Main ActsExplorer Component
 const ActsExplorer = ({ embedded = false }) => {
+  // Data States
   const [acts, setActs] = useState([]);
-  const [pdfs, setPdfs] = useState([]);
   const [filteredActs, setFilteredActs] = useState([]);
-  const [filteredPdfs, setFilteredPdfs] = useState([]);
+  
+  // Filter States
   const [searchTerm, setSearchTerm] = useState("");
-  const [contentType, setContentType] = useState("acts");
   const [filters, setFilters] = useState({ category: "", status: "" });
+  
+  // UI States
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const [collapsedYears, setCollapsedYears] = useState({});
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(true); // Toggle filter visibility on mobile
 
+  const navigate = useNavigate();
+  const itemsPerPage = 9; // Increased slightly for grid density
+
+  // --- Fetching Logic ---
   useEffect(() => {
     const fetchData = async () => {
       try {
         const actsData = await getAllActs();
-        const pdfsData = await getAllPDFs();
-        setActs(actsData);
-        setFilteredActs(actsData);
-        setPdfs(pdfsData);
-        setFilteredPdfs(pdfsData);
+        const normalized = actsData.map((a) => ({ ...a, year: a.year || "Unknown" }));
+        setActs(normalized);
+        setFilteredActs(normalized);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching acts:", error);
       }
     };
     fetchData();
   }, []);
 
-  // 🔹 Search & Filter logic
+  // --- Filtering Logic ---
   useEffect(() => {
-    let result = contentType === "acts" ? acts : pdfs;
-
+    let result = acts;
     if (searchTerm) {
+      const q = searchTerm.toLowerCase();
       result = result.filter(
         (item) =>
-          item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.description?.toLowerCase().includes(searchTerm.toLowerCase())
+          item.title?.toLowerCase().includes(q) ||
+          item.description?.toLowerCase().includes(q)
       );
     }
-
     Object.entries(filters).forEach(([key, value]) => {
       if (value) result = result.filter((item) => item[key] === value);
     });
-
-    if (contentType === "acts") setFilteredActs(result);
-    else setFilteredPdfs(result);
+    setFilteredActs(result);
     setCurrentPage(1);
-  }, [searchTerm, filters, acts, pdfs, contentType]);
+  }, [searchTerm, filters, acts]);
 
+  // --- Pagination Logic ---
   const currentItems = useMemo(() => {
-    const data = contentType === "acts" ? filteredActs : filteredPdfs;
     const start = (currentPage - 1) * itemsPerPage;
-    return data.slice(start, start + itemsPerPage);
-  }, [filteredActs, filteredPdfs, contentType, currentPage]);
+    return filteredActs.slice(start, start + itemsPerPage);
+  }, [filteredActs, currentPage]);
 
-  const totalPages = Math.ceil(
-    (contentType === "acts" ? filteredActs.length : filteredPdfs.length) /
-      itemsPerPage
-  );
+  const totalPages = Math.ceil(filteredActs.length / itemsPerPage);
+
+  // --- Grouping Logic ---
+  const actsByYear = useMemo(() => {
+    const grouped = {};
+    acts.forEach((a) => {
+      const y = a.year || "Unknown";
+      if (!grouped[y]) grouped[y] = [];
+      grouped[y].push(a);
+    });
+    const sortedKeys = Object.keys(grouped).sort((a, b) => {
+      const na = Number(a);
+      const nb = Number(b);
+      if (!isNaN(na) && !isNaN(nb)) return nb - na;
+      return String(b).localeCompare(String(a));
+    });
+    const ordered = {};
+    sortedKeys.forEach((k) => (ordered[k] = grouped[k]));
+    return ordered;
+  }, [acts]);
+
+  const toggleYear = (year) =>
+    setCollapsedYears((s) => ({ ...s, [year]: !s[year] }));
 
   const filterOptions = [
-    {
-      type: "category",
-      label: "Categories",
-      values: ["Income Tax", "Corporate Tax", "Property Tax", "Sales Tax"],
-    },
-    {
-      type: "status",
-      label: "Status",
-      values: ["Active", "Draft", "Archived"],
-    },
+    { type: "category", label: "Categories", values: ["Income Tax", "Corporate Tax", "Property Tax", "Sales Tax"] },
+    { type: "status", label: "Status", values: ["Active", "Draft", "Archived"] },
   ];
 
-  return (
-    <div className="bg-[#f5f5f7] text-black min-h-screen">
-      {/* ✅ Hero Section */}
-      {!embedded && (
-        <section
-          id="hero-section"
-          className="relative h-[45vh] flex flex-col items-center justify-center text-center overflow-hidden"
-          style={{
-            backgroundImage: `url(/acts-bg.jpg)`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-          <motion.div
-            variants={bouncyDrop}
-            initial="hidden"
-            animate="visible"
-            className="relative z-10 px-4"
-          >
-            <MenuBookIcon fontSize="large" className="mb-4 text-white" />
-            <motion.h1
-              initial={{ y: 40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 150, damping: 12 }}
-              className="text-4xl md:text-5xl font-bold mb-4 text-white drop-shadow-md"
-            >
-              Documents Explorer
-            </motion.h1>
-            <motion.p
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
-              className="text-lg text-gray-200 max-w-2xl mx-auto"
-            >
-              Browse, filter, and search through all tax documents with ease.
-            </motion.p>
-          </motion.div>
-        </section>
-      )}
-
-      {/* ✅ Explorer Section */}
-      <section
-        id="acts-section"
-        className={`${embedded ? "pt-0" : "pt-12"} scroll-mt-[100px] bg-[#f5f5f7] text-black pb-12`}
-      >
-        <div className="container mx-auto px-6">
-          {/* Toggle Buttons */}
-          <motion.div
-            variants={bouncyDrop}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="flex justify-center mb-6"
-          >
-            <div className="flex space-x-4">
-              <button
-                onClick={() => setContentType("acts")}
-                className={`px-4 py-2 rounded-md font-medium transition flex items-center shadow-sm ${
-                  contentType === "acts"
-                    ? "bg-black text-white"
-                    : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                }`}
-              >
-                <MenuBookIcon className="mr-2" />
-                Acts
-              </button>
-              <button
-                onClick={() => setContentType("pdfs")}
-                className={`px-4 py-2 rounded-md font-medium transition flex items-center shadow-sm ${
-                  contentType === "pdfs"
-                    ? "bg-black text-white"
-                    : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                }`}
-              >
-                <PictureAsPdfIcon className="mr-2" />
-                PDFs
-              </button>
-            </div>
-          </motion.div>
-
-          {/* Search & Filter */}
-          <motion.div
-            variants={bouncyDrop}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="bg-gradient-to-br from-[#ffffff] to-[#f5f5f7] shadow-sm rounded-xl p-6 mb-10 border border-gray-200/60"
-          >
-            <SearchFilter
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              filters={filters}
-              setFilters={setFilters}
-              filterOptions={filterOptions}
-            />
-          </motion.div>
-
-          {/* Cards Grid with stagger */}
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            variants={{
-              visible: {
-                transition: { staggerChildren: 0.12, delayChildren: 0.15 },
-              },
+  // --- Sidebar Component (Reused for Mobile & Desktop) ---
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full bg-white border-r border-gray-200">
+      <div className="p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+        <h3 className="font-bold text-gray-800 flex items-center gap-2">
+          <MenuBookIcon className="text-blue-600" fontSize="small" />
+          Directory
+        </h3>
+        <button 
+            onClick={() => {
+                const allCollapsed = Object.values(collapsedYears).every(Boolean);
+                const newState = {};
+                Object.keys(actsByYear).forEach((k) => (newState[k] = !allCollapsed));
+                setCollapsedYears(newState);
             }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            {currentItems.map((item, index) =>
-              contentType === "acts" ? (
-                <ActCard key={item.id} act={item} index={index} />
-              ) : (
-                <PdfCard key={item.id} pdf={item} index={index} />
-              )
-            )}
-          </motion.div>
+            className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+        >
+            Toggle All
+        </button>
+      </div>
 
-          {/* Empty State */}
-          {currentItems.length === 0 && (
-            <p className="text-center text-gray-500 mt-8">
-              No {contentType} found.
-            </p>
-          )}
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <motion.div
-              variants={bouncyDrop}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="flex justify-center mt-10"
+      <div className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
+        {Object.entries(actsByYear).map(([year, list]) => (
+          <div key={year} className="group">
+            <button
+              onClick={() => toggleYear(year)}
+              className={`w-full flex items-center justify-between p-3 rounded-lg text-sm transition-colors ${
+                !collapsedYears[year] ? "bg-gray-50 text-blue-700 font-semibold" : "text-gray-600 hover:bg-gray-50"
+              }`}
             >
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (number) => (
-                  <button
-                    key={number}
-                    onClick={() => setCurrentPage(number)}
-                    className={`mx-1 px-4 py-2 rounded-md font-medium transition shadow-sm ${
-                      currentPage === number
-                        ? "bg-[#34353A] text-white"
-                        : "bg-[#E5E5E5] text-black hover:bg-[#D1D1D1]"
-                    }`}
-                  >
-                    {number}
-                  </button>
-                )
+              <span className="flex items-center gap-2">
+                {year}
+                <span className="bg-gray-200 text-gray-600 text-[10px] px-2 py-0.5 rounded-full">
+                    {list.length}
+                </span>
+              </span>
+              <ExpandMoreIcon
+                fontSize="small"
+                className={`transition-transform duration-200 ${collapsedYears[year] ? "-rotate-90 text-gray-400" : "rotate-0 text-blue-600"}`}
+              />
+            </button>
+
+            <AnimatePresence>
+              {!collapsedYears[year] && (
+                <motion.ul
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  {list.map((a) => (
+                    <li key={a.id} className="pl-4 pr-2 py-1">
+                      <button
+                        onClick={() => navigate(`/act/${a.id}`)}
+                        className="w-full text-left text-sm text-gray-500 hover:text-blue-600 hover:translate-x-1 transition-all truncate block py-1 border-l-2 border-transparent hover:border-blue-300 pl-3"
+                        title={a.title}
+                      >
+                        {a.title}
+                      </button>
+                    </li>
+                  ))}
+                </motion.ul>
               )}
-            </motion.div>
-          )}
+            </AnimatePresence>
+          </div>
+        ))}
+        {Object.keys(actsByYear).length === 0 && (
+           <div className="text-center py-10 text-gray-400 text-sm">No years found</div>
+        )}
+      </div>
+      
+      {/* Bottom Action Area */}
+      <div className="p-4 border-t border-gray-100 bg-gray-50">
+        <button
+            onClick={() => navigate("/compare")}
+            className="w-full py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium shadow-lg shadow-gray-300/50 hover:bg-black transition-transform active:scale-95"
+        >
+            Compare Acts
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col h-screen bg-[#F3F4F6] overflow-hidden">
+      
+      {/* --- Mobile Header --- */}
+      <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between z-30">
+        <div className="flex items-center gap-3">
+            <button onClick={() => setIsMobileSidebarOpen(true)} className="p-1 hover:bg-gray-100 rounded">
+                <MenuIcon className="text-gray-600" />
+            </button>
+            <span className="font-bold text-lg tracking-tight">Acts Explorer</span>
         </div>
-      </section>
+        <button onClick={() => setShowFilters(!showFilters)} className={`p-2 rounded ${showFilters ? 'bg-blue-50 text-blue-600' : 'text-gray-500'}`}>
+            <FilterListIcon />
+        </button>
+      </div>
+
+      {/* --- Main Layout --- */}
+      <div className="flex flex-1 overflow-hidden relative">
+        
+        {/* Desktop Sidebar (Hidden on Mobile) */}
+        <aside className="hidden lg:block w-72 h-full flex-shrink-0 z-20 shadow-sm">
+          <SidebarContent />
+        </aside>
+
+        {/* Mobile Sidebar (Drawer) */}
+        <AnimatePresence>
+          {isMobileSidebarOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsMobileSidebarOpen(false)}
+                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
+              />
+              <motion.div
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="fixed inset-y-0 left-0 w-4/5 max-w-xs bg-white z-50 shadow-2xl lg:hidden"
+              >
+                <div className="absolute top-2 right-2">
+                    <button onClick={() => setIsMobileSidebarOpen(false)} className="p-2 bg-gray-100 rounded-full">
+                        <CloseIcon fontSize="small" />
+                    </button>
+                </div>
+                <SidebarContent />
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* --- Main Scrollable Content Area --- */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden relative scroll-smooth bg-[#F3F4F6]">
+            
+            {/* Hero Section - Optional per embedded prop */}
+            {!embedded && (
+                <section className="relative h-64 md:h-80 w-full overflow-hidden flex items-center justify-center">
+                    <div className="absolute inset-0 bg-gray-900" style={{ backgroundImage: `url(/acts-bg.jpg)`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.4 }} />
+                    <div className="relative z-10 text-center px-4">
+                        <motion.h1 
+                            initial={{ y: 20, opacity: 0 }} 
+                            animate={{ y: 0, opacity: 1 }}
+                            className="text-3xl md:text-5xl font-extrabold text-white mb-2 tracking-tight"
+                        >
+                            Legislative Acts
+                        </motion.h1>
+                        <p className="text-gray-200 text-sm md:text-base max-w-xl mx-auto">
+                            Comprehensive digital archive of all acts, regulations, and bylaws.
+                        </p>
+                    </div>
+                </section>
+            )}
+
+            <div className="container mx-auto px-4 md:px-8 py-8 max-w-7xl">
+                
+                {/* Search & Filters Container */}
+                <div className={`mb-8 ${!showFilters && 'hidden md:block'}`}>
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200/60 p-1">
+                        <SearchFilter
+                            searchTerm={searchTerm}
+                            setSearchTerm={setSearchTerm}
+                            filters={filters}
+                            setFilters={setFilters}
+                            filterOptions={filterOptions}
+                        />
+                    </div>
+                </div>
+
+                {/* Results Header */}
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold text-gray-800">
+                        {searchTerm || filters.category || filters.status ? "Search Results" : "Recent Acts"}
+                    </h2>
+                    <span className="text-sm text-gray-500 bg-white px-3 py-1 rounded-full border border-gray-200">
+                        {filteredActs.length} Documents
+                    </span>
+                </div>
+
+                {/* Grid */}
+                <motion.div
+                    layout
+                    className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                >
+                    <AnimatePresence>
+                        {currentItems.map((item, index) => (
+                            <ActCard key={item.id} act={item} index={index} />
+                        ))}
+                    </AnimatePresence>
+                </motion.div>
+
+                {/* Empty State */}
+                {currentItems.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+                        <MenuBookIcon style={{ fontSize: 60, opacity: 0.2 }} className="mb-4"/>
+                        <p className="text-lg font-medium">No acts match your search.</p>
+                        <button 
+                            onClick={() => {setSearchTerm(""); setFilters({ category: "", status: "" })}}
+                            className="mt-4 text-blue-600 hover:underline"
+                        >
+                            Clear filters
+                        </button>
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="flex justify-center mt-12 mb-8">
+                        <div className="flex gap-2 bg-white p-2 rounded-lg shadow-sm border border-gray-200">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+                                <button
+                                    key={number}
+                                    onClick={() => setCurrentPage(number)}
+                                    className={`w-10 h-10 rounded-md font-medium text-sm transition-all ${
+                                        currentPage === number
+                                            ? "bg-gray-900 text-white shadow-md transform scale-105"
+                                            : "text-gray-600 hover:bg-gray-100"
+                                    }`}
+                                >
+                                    {number}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </main>
+      </div>
     </div>
   );
 };

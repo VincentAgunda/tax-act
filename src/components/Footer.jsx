@@ -57,7 +57,7 @@ const Footer = () => {
             <h3 className="text-white font-semibold text-lg mb-4">Contact</h3>
             <ul className="space-y-3 text-sm">
               <li>Email: <a href="#" className="hover:text-white">support@taxacts.com</a></li>
-              <li>Phone: <span className="text-gray-300">+254 700 123 456</span></li>
+              <li>Phone: <span className="text-gray-300">+254 708 513 560</span></li>
               <li>Location: <span className="text-gray-300">Nairobi, Kenya</span></li>
               <li className="text-gray-300">Mon - Fri • 9:00am - 5:00pm</li>
             </ul>
