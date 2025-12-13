@@ -100,10 +100,8 @@ const ActsExplorer = ({ embedded = false }) => {
   ];
 
   // Sidebar Component (desktop + mobile)
-  // Added isMobile prop to handle styling differences
-  const SidebarContent = ({ isMobile = false }) => (
-    <div className={`flex flex-col h-full bg-white ${!isMobile && "border-r border-gray-200"}`}>
-      {/* Sidebar Header */}
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full bg-white border-r border-gray-200">
       <div className="p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
         <h3 className="font-bold text-gray-800 flex items-center gap-2">
           <MenuBookIcon className="text-blue-600" fontSize="small" />
@@ -125,7 +123,6 @@ const ActsExplorer = ({ embedded = false }) => {
         </button>
       </div>
 
-      {/* Scrollable List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
         {Object.entries(actsByYear).map(([year, list]) => (
           <div key={year} className="group">
@@ -163,10 +160,7 @@ const ActsExplorer = ({ embedded = false }) => {
                   {list.map((a) => (
                     <li key={a.id} className="pl-4 pr-2 py-1">
                       <button
-                        onClick={() => {
-                          navigate(`/act/${a.id}`);
-                          if (isMobile) setIsMobileSidebarOpen(false);
-                        }}
+                        onClick={() => navigate(`/act/${a.id}`)}
                         className="w-full text-left text-sm text-gray-500 hover:text-blue-600 hover:translate-x-1 transition-all truncate block py-1 border-l-2 border-transparent hover:border-blue-300 pl-3"
                         title={a.title}
                       >
@@ -181,14 +175,9 @@ const ActsExplorer = ({ embedded = false }) => {
         ))}
       </div>
 
-      {/* Sidebar Footer - Compare Button */}
-      {/* Added pb-safe or extra bottom padding for mobile to avoid being hidden by home bar */}
-      <div className={`p-4 border-t border-gray-100 bg-gray-50 ${isMobile ? "pb-8" : "pb-4"}`}>
+      <div className="p-4 border-t border-gray-100 bg-gray-50">
         <button
-          onClick={() => {
-            navigate("/compare");
-            if (isMobile) setIsMobileSidebarOpen(false);
-          }}
+          onClick={() => navigate("/compare")}
           className="w-full py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium shadow-lg hover:bg-black transition-transform active:scale-95"
         >
           Compare Acts
@@ -200,8 +189,45 @@ const ActsExplorer = ({ embedded = false }) => {
   return (
     <div className="flex flex-col h-screen bg-[#F3F4F6] overflow-hidden">
       
+      {/* --- FIX: MOVED MOBILE SIDEBAR HERE (Outside the relative container) --- */}
+      <AnimatePresence>
+        {isMobileSidebarOpen && (
+          <>
+            {/* Dark Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.4 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileSidebarOpen(false)}
+              className="fixed inset-0 bg-black z-[60] lg:hidden"
+            />
+
+            {/* Sidebar Drawer */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 left-0 w-4/5 max-w-xs bg-white z-[70] shadow-2xl lg:hidden flex flex-col"
+            >
+              <div className="absolute top-2 right-2 z-20">
+                <button
+                  onClick={() => setIsMobileSidebarOpen(false)}
+                  className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                >
+                  <CloseIcon fontSize="small" />
+                </button>
+              </div>
+
+              <SidebarContent />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+      {/* --------------------------------------------------------------------- */}
+
       {/* Mobile Header */}
-      <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between z-30">
+      <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between z-30 relative">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMobileSidebarOpen(true)}
@@ -223,54 +249,15 @@ const ActsExplorer = ({ embedded = false }) => {
       </div>
 
       <div className="flex flex-1 overflow-hidden relative">
-        
+
         {/* Desktop Sidebar */}
         <aside className="hidden lg:block w-72 h-full flex-shrink-0 z-20 shadow-sm">
           <SidebarContent />
         </aside>
 
-        {/* Mobile Sidebar */}
-        <AnimatePresence>
-          {isMobileSidebarOpen && (
-            <>
-              {/* Overlay with blur */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsMobileSidebarOpen(false)}
-                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
-              />
-
-              {/* Sidebar Drawer */}
-              <motion.div
-                initial={{ x: "-100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "-100%" }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                // UPDATED: Use h-[100dvh] to ensure full height on mobile browsers (address bar fix)
-                className="fixed top-0 left-0 bottom-0 w-4/5 max-w-xs bg-white z-50 shadow-2xl lg:hidden h-[100dvh] flex flex-col"
-              >
-                <div className="absolute top-2 right-2 z-50">
-                  <button
-                    onClick={() => setIsMobileSidebarOpen(false)}
-                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
-                  >
-                    <CloseIcon fontSize="small" />
-                  </button>
-                </div>
-
-                {/* Pass isMobile=true to handle specific mobile styling */}
-                <div className="flex-1 overflow-hidden">
-                    <SidebarContent isMobile={true} />
-                </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-
         {/* MAIN CONTENT */}
         <main className="flex-1 overflow-y-auto scroll-smooth bg-[#F3F4F6]">
+
           {!embedded && (
             <section className="relative h-64 md:h-80 w-full overflow-hidden flex items-center justify-center">
               <div
@@ -297,6 +284,7 @@ const ActsExplorer = ({ embedded = false }) => {
           )}
 
           <div className="container mx-auto px-4 md:px-8 py-8 max-w-7xl">
+
             {/* Search Filters */}
             <div className={`mb-8 ${!showFilters && "hidden md:block"}`}>
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-1">
