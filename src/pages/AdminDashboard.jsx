@@ -1,4 +1,3 @@
-// src/pages/AdminDashboard.jsx
 import { supabase } from '../supabaseClient';
 import React, { useState, useEffect, memo, useRef } from "react";
 import RichTextEditor from "../components/RichTextEditor";
@@ -18,7 +17,6 @@ import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import HomeIcon from '@mui/icons-material/Home';
 import ArticleIcon from '@mui/icons-material/Article';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 
 // --- Reusable Components ---
 
@@ -54,35 +52,24 @@ const FormSelect = memo(({ label, error, children, ...props }) => (
   </div>
 ));
 
-// --- Chapter Manager Component (The Fixed Canvas) ---
+// --- Chapter Manager Component (Mobile Responsive) ---
 const ChapterManager = ({ chapters, setChapters, error }) => {
     const [activeChapterIndex, setActiveChapterIndex] = useState(0);
     const sidebarRef = useRef(null);
-
-    // Helper to safely get current chapter
     const currentChapter = chapters[activeChapterIndex] || chapters[0];
 
     const addChapter = () => {
         const newChapter = { title: `Chapter ${chapters.length + 1}`, content: "" };
         const newChapters = [...chapters, newChapter];
         setChapters(newChapters);
-        // Switch to new chapter immediately
         setActiveChapterIndex(newChapters.length - 1);
     };
-
-    // Auto-scroll sidebar when a new chapter is added
-    useEffect(() => {
-        if (sidebarRef.current) {
-            sidebarRef.current.scrollTop = sidebarRef.current.scrollHeight;
-        }
-    }, [chapters.length]);
 
     const removeChapter = (index) => {
         if (chapters.length === 1) return alert("You must have at least one chapter.");
         if (window.confirm("Delete this chapter?")) {
             const updated = chapters.filter((_, i) => i !== index);
             setChapters(updated);
-            // Adjust index to prevent crash if deleting the currently active one
             setActiveChapterIndex(prev => (index === prev ? Math.max(0, index - 1) : prev > index ? prev - 1 : prev));
         }
     };
@@ -94,40 +81,40 @@ const ChapterManager = ({ chapters, setChapters, error }) => {
     };
 
     return (
-        <div className="border border-gray-300 rounded-xl overflow-hidden bg-white shadow-sm mt-4 flex flex-col h-[600px]">
+        <div className="border border-gray-300 rounded-xl overflow-hidden bg-white shadow-sm mt-4 flex flex-col md:h-[650px]">
             {/* Header */}
             <div className="bg-gray-100 p-3 border-b border-gray-300 flex items-center justify-between flex-shrink-0">
-                <h3 className="font-bold text-gray-700 flex items-center gap-2">
-                    <ArticleIcon /> Act Content ({chapters.length} Pages)
+                <h3 className="font-bold text-gray-700 flex items-center gap-2 text-sm md:text-base">
+                    <ArticleIcon /> Act Content ({chapters.length})
                 </h3>
                 <button type="button" onClick={addChapter} className="text-xs bg-black text-white px-3 py-1.5 rounded hover:bg-gray-800 transition flex items-center gap-1">
-                    <AddIcon fontSize="small"/> Add Page
+                    <AddIcon fontSize="small"/> <span className="hidden sm:inline">Add Page</span><span className="sm:hidden">Add</span>
                 </button>
             </div>
             
-            <div className="flex flex-1 overflow-hidden">
-                {/* Left: Chapter List - scrollable */}
-                <div className="w-64 bg-gray-50 border-r border-gray-200 flex-col flex flex-shrink-0">
-                    <div className="p-2 text-xs font-bold text-gray-400 uppercase bg-gray-100 border-b border-gray-200">Page Navigation</div>
-                    <div ref={sidebarRef} className="overflow-y-auto flex-1 p-2 space-y-1">
+            <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+                {/* Navigation: Horizontal on Mobile, Vertical on Desktop */}
+                <div className="w-full md:w-64 bg-gray-50 border-b md:border-b-0 md:border-r border-gray-200 flex flex-col flex-shrink-0">
+                    <div className="hidden md:block p-2 text-xs font-bold text-gray-400 uppercase bg-gray-100 border-b border-gray-200">Page Navigation</div>
+                    <div ref={sidebarRef} className="flex md:flex-col overflow-x-auto md:overflow-y-auto p-2 space-x-2 md:space-x-0 md:space-y-1">
                         {chapters.map((chap, idx) => (
                             <div 
                                 key={idx} 
                                 onClick={() => setActiveChapterIndex(idx)}
-                                className={`group flex items-center gap-2 p-3 rounded-lg cursor-pointer transition border ${
+                                className={`flex-shrink-0 md:flex-shrink flex items-center gap-2 p-2 md:p-3 rounded-lg cursor-pointer transition border whitespace-nowrap md:whitespace-normal ${
                                     activeChapterIndex === idx 
                                     ? "bg-black text-white border-black shadow-md" 
                                     : "bg-white text-gray-600 border-transparent hover:bg-gray-200"
                                 }`} 
                             >
-                                <span className={`font-mono text-xs ${activeChapterIndex === idx ? "opacity-50" : "text-gray-400"}`}>{idx + 1}</span>
-                                <span className="text-sm truncate flex-1 font-medium">
-                                    {chap.title || "Untitled Page"}
+                                <span className={`font-mono text-[10px] md:text-xs ${activeChapterIndex === idx ? "opacity-50" : "text-gray-400"}`}>{idx + 1}</span>
+                                <span className="text-xs md:text-sm truncate max-w-[100px] md:max-w-none font-medium">
+                                    {chap.title || "Untitled"}
                                 </span>
                                 <button 
                                     type="button"
                                     onClick={(e) => { e.stopPropagation(); removeChapter(idx); }}
-                                    className={`p-1 rounded opacity-0 group-hover:opacity-100 transition ${
+                                    className={`p-1 rounded transition ${
                                         activeChapterIndex === idx ? "hover:bg-gray-700 text-white" : "hover:bg-red-100 text-red-500"
                                     }`}
                                 >
@@ -138,14 +125,12 @@ const ChapterManager = ({ chapters, setChapters, error }) => {
                     </div>
                 </div>
 
-                {/* Right: Canvas Editor */}
-                <div className="flex-1 bg-white overflow-y-auto p-6 relative">
+                {/* Editor Area */}
+                <div className="flex-1 bg-white overflow-y-auto p-4 md:p-6 relative">
                     {currentChapter ? (
-                        /* IMPORTANT: The 'key' prop here forces React to remount the inputs when changing pages.
-                           This ensures the input fields clear out or populate correctly for the new page. */
                         <div key={activeChapterIndex} className="space-y-4 animate-fadeIn max-w-4xl mx-auto">
                              <div className="flex items-center justify-between mb-2 border-b border-gray-100 pb-2">
-                                <span className="text-xs font-bold text-gray-400 uppercase">Currently Editing Page {activeChapterIndex + 1}</span>
+                                <span className="text-[10px] md:text-xs font-bold text-gray-400 uppercase">Editing Page {activeChapterIndex + 1}</span>
                              </div>
 
                              <FormInput 
@@ -153,10 +138,9 @@ const ChapterManager = ({ chapters, setChapters, error }) => {
                                 value={currentChapter.title} 
                                 onChange={(e) => updateChapter('title', e.target.value)}
                                 placeholder="e.g. Preliminary Provisions"
-                                autoFocus={true} 
                             />
                             
-                            <div className="h-full flex flex-col">
+                            <div className="flex flex-col">
                                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Page Content</label>
                                 <RichTextEditor 
                                     value={currentChapter.content} 
@@ -166,7 +150,7 @@ const ChapterManager = ({ chapters, setChapters, error }) => {
                             </div>
                         </div>
                     ) : (
-                        <div className="flex items-center justify-center h-full text-gray-400">
+                        <div className="flex items-center justify-center h-40 md:h-full text-gray-400">
                             Select a page to edit
                         </div>
                     )}
@@ -179,10 +163,8 @@ const ChapterManager = ({ chapters, setChapters, error }) => {
 // --- Form Managers ---
 
 const ActsManager = ({ formState, setFormState, errors, isEditing, loading, data, handleSubmit, handleEdit, handleDelete, resetForm }) => {
-    // Local state for chapters array. Syncs with formState.content on change.
     const [chapters, setChapters] = useState([{ title: "Chapter 1", content: "" }]);
 
-    // When editing an act, parse the content string back into JSON array
     useEffect(() => {
         if (formState.content) {
             try {
@@ -190,52 +172,42 @@ const ActsManager = ({ formState, setFormState, errors, isEditing, loading, data
                 if (Array.isArray(parsed)) setChapters(parsed);
                 else setChapters([{ title: "Main Content", content: formState.content }]);
             } catch (e) {
-                // If standard string (legacy data)
-                if (formState.content.length > 0) {
-                     setChapters([{ title: "Main Content", content: formState.content }]);
-                } else {
-                     setChapters([{ title: "Chapter 1", content: "" }]);
-                }
+                setChapters([{ title: "Main Content", content: formState.content || "" }]);
             }
-        } else {
-            // Reset
-            if (!isEditing) setChapters([{ title: "Chapter 1", content: "" }]);
+        } else if (!isEditing) {
+            setChapters([{ title: "Chapter 1", content: "" }]);
         }
-    }, [formState.id, isEditing]); // Trigger on ID change (new selection)
+    }, [formState.id, isEditing]);
 
-    // Sync local chapters to formState string before submit
     const onSubmitProxy = (e) => {
         e.preventDefault();
         const contentString = JSON.stringify(chapters);
-        // We manually inject the stringified chapters into the submit handler
-        const syntheticEvent = { ...e, preventDefault: () => {} }; 
-        handleSubmit(syntheticEvent, contentString);
+        handleSubmit(e, contentString);
     };
 
     return (
       <div className="bg-[#f5f5f7] min-h-full pb-10">
-        <motion.div initial="hidden" animate="visible" variants={fadeIn} className="max-w-6xl mx-auto space-y-8">
+        <motion.div initial="hidden" animate="visible" variants={fadeIn} className="max-w-6xl mx-auto space-y-6">
             
-            {/* Form Section */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                     <h2 className="text-xl font-bold text-gray-800">{isEditing ? "Edit Act" : "Create New Act"}</h2>
+                <div className="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                     <h2 className="text-lg md:text-xl font-bold text-gray-800">{isEditing ? "Edit Act" : "New Act"}</h2>
                      {isEditing && (
-                        <button type="button" onClick={() => { resetForm(); setChapters([{ title: "Chapter 1", content: "" }]); }} className="text-sm text-gray-600 hover:text-black flex items-center gap-1">
+                        <button type="button" onClick={() => { resetForm(); setChapters([{ title: "Chapter 1", content: "" }]); }} className="text-xs md:text-sm text-gray-600 hover:text-black flex items-center gap-1">
                             <AddIcon fontSize="small"/> New
                         </button>
                      )}
                 </div>
                 
-                <form onSubmit={(e) => onSubmitProxy(e)} className="p-6 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form onSubmit={onSubmitProxy} className="p-4 md:p-6 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                         <FormInput label="Act Title" value={formState.title} error={errors.title} onChange={(e) => setFormState({ ...formState, title: e.target.value })} required />
                         <FormInput label="Act Year" type="number" value={formState.year} onChange={(e) => setFormState({ ...formState, year: e.target.value })} required />
                     </div>
                     
                     <FormInput label="Short Description" value={formState.description} error={errors.description} onChange={(e) => setFormState({ ...formState, description: e.target.value })} required />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                         <FormSelect label="Category" value={formState.category} error={errors.category} onChange={(e) => setFormState({ ...formState, category: e.target.value })} required>
                             <option value="">Select...</option>
                             <option value="Income Tax">Income Tax</option>
@@ -250,7 +222,6 @@ const ActsManager = ({ formState, setFormState, errors, isEditing, loading, data
                         </FormSelect>
                     </div>
 
-                    {/* The New Chapter Manager */}
                     <ChapterManager chapters={chapters} setChapters={setChapters} error={errors.content} />
 
                     <div className="pt-4">
@@ -262,23 +233,23 @@ const ActsManager = ({ formState, setFormState, errors, isEditing, loading, data
             </div>
 
             {/* List Section */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
                  <h2 className="text-lg font-bold text-gray-800 mb-4">Act Library</h2>
                  {data.length === 0 ? <div className="text-center py-10 text-gray-400">No acts found</div> : (
                      <div className="grid grid-cols-1 gap-3">
                          {data.map((act) => (
-                             <div key={act.id} className="flex items-center justify-between p-4 rounded-lg border border-gray-100 hover:border-gray-300 hover:shadow-sm transition bg-white">
-                                 <div>
-                                     <h3 className="font-bold text-gray-800">{act.title}</h3>
-                                     <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                             <div key={act.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-gray-100 hover:border-gray-300 hover:shadow-sm transition bg-white gap-4">
+                                 <div className="overflow-hidden">
+                                     <h3 className="font-bold text-gray-800 truncate">{act.title}</h3>
+                                     <div className="flex flex-wrap items-center gap-2 text-[10px] md:text-xs text-gray-500 mt-1">
                                          <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-600">{act.year}</span>
                                          <span>{act.category}</span>
                                          <span className={`px-2 py-0.5 rounded ${act.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>{act.status}</span>
                                      </div>
                                  </div>
-                                 <div className="flex items-center gap-2">
-                                     <button onClick={() => handleEdit(act)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition"><EditIcon fontSize="small"/></button>
-                                     <button onClick={() => handleDelete(act)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition"><DeleteIcon fontSize="small"/></button>
+                                 <div className="flex items-center gap-2 sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0">
+                                     <button onClick={() => handleEdit(act)} className="flex-1 sm:flex-none p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full flex justify-center transition"><EditIcon fontSize="small"/></button>
+                                     <button onClick={() => handleDelete(act)} className="flex-1 sm:flex-none p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full flex justify-center transition"><DeleteIcon fontSize="small"/></button>
                                  </div>
                              </div>
                          ))}
@@ -290,18 +261,17 @@ const ActsManager = ({ formState, setFormState, errors, isEditing, loading, data
     );
 };
 
-// --- News Manager (Kept simple, no chapters needed) ---
 const NewsManager = ({ formState, setFormState, errors, isEditing, loading, data, handleSubmit, handleEdit, handleDelete, resetForm }) => (
     <div className="bg-[#f5f5f7] min-h-full pb-10">
-        <motion.form key="news-form" onSubmit={(e) => handleSubmit(e)} initial="hidden" animate="visible" variants={fadeIn} className="max-w-6xl mx-auto space-y-8">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
+        <motion.form key="news-form" onSubmit={(e) => handleSubmit(e)} initial="hidden" animate="visible" variants={fadeIn} className="max-w-6xl mx-auto space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 space-y-6">
                 <div className="flex justify-between items-center border-b border-gray-100 pb-4">
                     <h2 className="text-xl font-bold text-gray-800">{isEditing ? "Edit News" : "Add News"}</h2>
                     {isEditing && <button type="button" onClick={resetForm} className="text-sm flex items-center gap-1"><AddIcon fontSize="small"/> New</button>}
                 </div>
                 
                 <FormInput label="Title" value={formState.title} error={errors.title} onChange={(e) => setFormState({ ...formState, title: e.target.value })} required />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                      <FormSelect label="Category" value={formState.category} onChange={(e) => setFormState({ ...formState, category: e.target.value })} required>
                         <option value="General">General</option>
                         <option value="Tax News">Tax News</option>
@@ -317,7 +287,7 @@ const NewsManager = ({ formState, setFormState, errors, isEditing, loading, data
                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Content</label>
                      <RichTextEditor value={formState.content} onChange={(c) => setFormState({ ...formState, content: c })} />
                 </div>
-                <button type="submit" disabled={loading} className="bg-black text-white px-6 py-2 rounded-lg font-bold hover:bg-gray-800">{loading ? "Saving..." : "Save News"}</button>
+                <button type="submit" disabled={loading} className="w-full md:w-auto bg-black text-white px-6 py-3 rounded-lg font-bold hover:bg-gray-800">{loading ? "Saving..." : "Save News"}</button>
             </div>
         </motion.form>
     </div>
@@ -359,7 +329,6 @@ const AdminDashboard = () => {
   };
 
   const validateForm = (form, type) => {
-      // Basic validation logic
       const errs = {};
       if(!form.title) errs.title = "Required";
       setErrors(prev => ({...prev, [type]: errs}));
@@ -373,7 +342,6 @@ const AdminDashboard = () => {
     setCurrentEditId(null);
   };
 
-  // Wrapper for generic submit, now accepts optional overridden content (for Acts JSON)
   const handleGenericSubmit = async (e, form, type, overrideContent = null) => {
     if(e) e.preventDefault();
     if (!validateForm(form, type)) return;
@@ -402,8 +370,19 @@ const AdminDashboard = () => {
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden font-sans text-gray-900">
       
+      {/* Sidebar Overlay for Mobile */}
+      <AnimatePresence>
+        {sidebarOpen && (
+            <motion.div 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                onClick={() => setSidebarOpen(false)}
+                className="fixed inset-0 bg-black/50 z-[60] md:hidden"
+            />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out`}>
+      <aside className={`fixed inset-y-0 left-0 z-[70] w-64 bg-white border-r border-gray-200 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out`}>
         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
              <h1 className="text-xl font-extrabold tracking-tight">Admin<span className="text-gray-400">Panel</span></h1>
              <button onClick={() => setSidebarOpen(false)} className="md:hidden"><CloseIcon /></button>
@@ -419,16 +398,21 @@ const AdminDashboard = () => {
       {/* Main Area */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         {/* Mobile Header */}
-        <div className="md:hidden bg-white border-b border-gray-200 p-4 flex items-center gap-3">
-             <button onClick={() => setSidebarOpen(true)}><MenuIcon /></button>
-             <span className="font-bold">Dashboard</span>
+        <div className="md:hidden bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+             <div className="flex items-center gap-3">
+                <button onClick={() => setSidebarOpen(true)} className="p-1"><MenuIcon /></button>
+                <span className="font-bold">Dashboard</span>
+             </div>
+             <div className="text-xs bg-gray-100 px-2 py-1 rounded font-mono uppercase text-gray-500">
+                {activeTab}
+             </div>
         </div>
 
         {/* Content Scroll Area */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
             {message.text && (
-                <div className="fixed top-4 right-4 z-50 animate-bounce">
-                    <Alert severity={message.type} onClose={() => setMessage({ type: "", text: "" })}>{message.text}</Alert>
+                <div className="fixed bottom-4 left-4 right-4 md:top-4 md:bottom-auto md:left-auto md:right-4 z-[100]">
+                    <Alert severity={message.type} onClose={() => setMessage({ type: "", text: "" })} className="shadow-2xl">{message.text}</Alert>
                 </div>
             )}
 
@@ -439,7 +423,7 @@ const AdminDashboard = () => {
                     handleSubmit={(e, contentStr) => handleGenericSubmit(e, actForm, 'act', contentStr)} 
                     handleEdit={(item) => { setActForm(item); setIsEditing(true); setCurrentEditId(item.id); }}
                     handleDelete={async (item) => { 
-                        if(confirm("Delete?")) {
+                        if(confirm("Delete this Act?")) {
                             await supabase.from('acts').delete().eq('id', item.id);
                             fetchData();
                         }
@@ -453,7 +437,7 @@ const AdminDashboard = () => {
                     handleSubmit={(e) => handleGenericSubmit(e, newsForm, 'news')}
                     handleEdit={(item) => { setNewsForm(item); setIsEditing(true); setCurrentEditId(item.id); }}
                     handleDelete={async (item) => { 
-                        if(confirm("Delete?")) {
+                        if(confirm("Delete this News item?")) {
                             await supabase.from('news').delete().eq('id', item.id);
                             fetchData();
                         }

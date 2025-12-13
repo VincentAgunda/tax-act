@@ -10,6 +10,116 @@ import CloseIcon from "@mui/icons-material/Close";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { useNavigate } from "react-router-dom";
 
+/**
+ * FIXED: SidebarContent is now outside the main component.
+ * This prevents the sidebar from re-mounting every time the state changes.
+ */
+const SidebarContent = ({ 
+  actsByYear, 
+  collapsedYears, 
+  toggleYear, 
+  setCollapsedYears, 
+  navigate,
+  onItemClick 
+}) => {
+  const allCollapsed = Object.values(collapsedYears).every(Boolean);
+
+  return (
+    <div className="flex flex-col h-full bg-white">
+      {/* Header section of Sidebar */}
+      <div className="p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+        <h3 className="font-bold text-gray-800 flex items-center gap-2">
+          <MenuBookIcon className="text-blue-600" fontSize="small" />
+          Directory
+        </h3>
+
+        <button
+          onClick={() => {
+            const newState = {};
+            Object.keys(actsByYear).forEach((year) => {
+              newState[year] = !allCollapsed;
+            });
+            setCollapsedYears(newState);
+          }}
+          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+        >
+          {allCollapsed ? "Expand All" : "Collapse All"}
+        </button>
+      </div>
+
+      {/* Scrollable list of years/acts */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
+        {Object.entries(actsByYear).map(([year, list]) => (
+          <div key={year} className="group">
+            <button
+              onClick={() => toggleYear(year)}
+              className={`w-full flex items-center justify-between p-3 rounded-lg text-sm transition-colors ${
+                !collapsedYears[year]
+                  ? "bg-gray-50 text-blue-700 font-semibold"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                {year}
+                <span className="bg-gray-200 text-gray-600 text-[10px] px-2 py-0.5 rounded-full">
+                  {list.length}
+                </span>
+              </span>
+
+              <ExpandMoreIcon
+                fontSize="small"
+                className={`transition-transform duration-200 ${
+                  collapsedYears[year] ? "-rotate-90 text-gray-400" : "rotate-0 text-blue-600"
+                }`}
+              />
+            </button>
+
+            <AnimatePresence initial={false}>
+              {!collapsedYears[year] && (
+                <motion.ul
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  {list.map((a) => (
+                    <li key={a.id} className="pl-4 pr-2 py-1">
+                      <button
+                        onClick={() => {
+                          navigate(`/act/${a.id}`);
+                          if (onItemClick) onItemClick(); // Close mobile sidebar
+                        }}
+                        className="w-full text-left text-sm text-gray-500 hover:text-blue-600 hover:translate-x-1 transition-all truncate block py-1 border-l-2 border-transparent hover:border-blue-300 pl-3"
+                        title={a.title}
+                      >
+                        {a.title}
+                      </button>
+                    </li>
+                  ))}
+                </motion.ul>
+              )}
+            </AnimatePresence>
+          </div>
+        ))}
+      </div>
+
+      {/* Footer section of Sidebar */}
+      <div className="p-4 border-t border-gray-100 bg-gray-50 mt-auto">
+        <button
+          onClick={() => {
+            navigate("/compare");
+            if (onItemClick) onItemClick();
+          }}
+          className="w-full py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium shadow-lg hover:bg-black transition-transform active:scale-95"
+        >
+          Compare Acts
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const ActsExplorer = ({ embedded = false }) => {
   const [acts, setActs] = useState([]);
   const [filteredActs, setFilteredActs] = useState([]);
@@ -40,7 +150,6 @@ const ActsExplorer = ({ embedded = false }) => {
   // Filter Logic
   useEffect(() => {
     let result = acts;
-
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       result = result.filter(
@@ -49,11 +158,9 @@ const ActsExplorer = ({ embedded = false }) => {
           i.description?.toLowerCase().includes(q)
       );
     }
-
     Object.entries(filters).forEach(([key, val]) => {
       if (val) result = result.filter((i) => i[key] === val);
     });
-
     setFilteredActs(result);
     setCurrentPage(1);
   }, [searchTerm, filters, acts]);
@@ -74,12 +181,9 @@ const ActsExplorer = ({ embedded = false }) => {
       if (!grouped[y]) grouped[y] = [];
       grouped[y].push(a);
     });
-
     const sortedYears = Object.keys(grouped).sort((a, b) => Number(b) - Number(a));
-
     const ordered = {};
     sortedYears.forEach((y) => (ordered[y] = grouped[y]));
-
     return ordered;
   }, [acts]);
 
@@ -99,101 +203,23 @@ const ActsExplorer = ({ embedded = false }) => {
     },
   ];
 
-  // Sidebar Component (desktop + mobile)
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-white border-r border-gray-200">
-      <div className="p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
-        <h3 className="font-bold text-gray-800 flex items-center gap-2">
-          <MenuBookIcon className="text-blue-600" fontSize="small" />
-          Directory
-        </h3>
-
-        <button
-          onClick={() => {
-            const allCollapsed = Object.values(collapsedYears).every(Boolean);
-            const newState = {};
-            Object.keys(actsByYear).forEach((year) => {
-              newState[year] = !allCollapsed;
-            });
-            setCollapsedYears(newState);
-          }}
-          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-        >
-          Toggle All
-        </button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
-        {Object.entries(actsByYear).map(([year, list]) => (
-          <div key={year} className="group">
-            <button
-              onClick={() => toggleYear(year)}
-              className={`w-full flex items-center justify-between p-3 rounded-lg text-sm transition-colors ${
-                !collapsedYears[year]
-                  ? "bg-gray-50 text-blue-700 font-semibold"
-                  : "text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                {year}
-                <span className="bg-gray-200 text-gray-600 text-[10px] px-2 py-0.5 rounded-full">
-                  {list.length}
-                </span>
-              </span>
-
-              <ExpandMoreIcon
-                fontSize="small"
-                className={`transition-transform duration-200 ${
-                  collapsedYears[year] ? "-rotate-90 text-gray-400" : "rotate-0 text-blue-600"
-                }`}
-              />
-            </button>
-
-            <AnimatePresence>
-              {!collapsedYears[year] && (
-                <motion.ul
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden"
-                >
-                  {list.map((a) => (
-                    <li key={a.id} className="pl-4 pr-2 py-1">
-                      <button
-                        onClick={() => navigate(`/act/${a.id}`)}
-                        className="w-full text-left text-sm text-gray-500 hover:text-blue-600 hover:translate-x-1 transition-all truncate block py-1 border-l-2 border-transparent hover:border-blue-300 pl-3"
-                        title={a.title}
-                      >
-                        {a.title}
-                      </button>
-                    </li>
-                  ))}
-                </motion.ul>
-              )}
-            </AnimatePresence>
-          </div>
-        ))}
-      </div>
-
-      <div className="p-4 border-t border-gray-100 bg-gray-50">
-        <button
-          onClick={() => navigate("/compare")}
-          className="w-full py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium shadow-lg hover:bg-black transition-transform active:scale-95"
-        >
-          Compare Acts
-        </button>
-      </div>
-    </div>
-  );
+  // Shared props for Sidebar
+  const sidebarProps = {
+    actsByYear,
+    collapsedYears,
+    toggleYear,
+    setCollapsedYears,
+    navigate,
+  };
 
   return (
     <div className="flex flex-col h-screen bg-[#F3F4F6] overflow-hidden">
       
-      {/* --- FIX: MOVED MOBILE SIDEBAR HERE (Outside the relative container) --- */}
+      {/* MOBILE SIDEBAR OVERLAY & DRAWER */}
       <AnimatePresence>
         {isMobileSidebarOpen && (
           <>
-            {/* Dark Overlay */}
+            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.4 }}
@@ -208,9 +234,10 @@ const ActsExplorer = ({ embedded = false }) => {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-4/5 max-w-xs bg-white z-[70] shadow-2xl lg:hidden flex flex-col"
+              className="fixed inset-y-0 left-0 w-[85%] max-w-xs bg-white z-[70] shadow-2xl lg:hidden flex flex-col overflow-hidden"
             >
-              <div className="absolute top-2 right-2 z-20">
+              {/* Close Button Inside Drawer */}
+              <div className="absolute top-4 right-4 z-[80]">
                 <button
                   onClick={() => setIsMobileSidebarOpen(false)}
                   className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
@@ -219,14 +246,17 @@ const ActsExplorer = ({ embedded = false }) => {
                 </button>
               </div>
 
-              <SidebarContent />
+              {/* Sidebar Content Inside Mobile Drawer */}
+              <SidebarContent 
+                {...sidebarProps} 
+                onItemClick={() => setIsMobileSidebarOpen(false)} 
+              />
             </motion.div>
           </>
         )}
       </AnimatePresence>
-      {/* --------------------------------------------------------------------- */}
 
-      {/* Mobile Header */}
+      {/* MOBILE HEADER */}
       <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between z-30 relative">
         <div className="flex items-center gap-3">
           <button
@@ -249,15 +279,14 @@ const ActsExplorer = ({ embedded = false }) => {
       </div>
 
       <div className="flex flex-1 overflow-hidden relative">
-
-        {/* Desktop Sidebar */}
-        <aside className="hidden lg:block w-72 h-full flex-shrink-0 z-20 shadow-sm">
-          <SidebarContent />
+        
+        {/* DESKTOP SIDEBAR */}
+        <aside className="hidden lg:block w-72 h-full flex-shrink-0 z-20 shadow-sm border-r border-gray-200 bg-white">
+          <SidebarContent {...sidebarProps} />
         </aside>
 
-        {/* MAIN CONTENT */}
+        {/* MAIN CONTENT AREA */}
         <main className="flex-1 overflow-y-auto scroll-smooth bg-[#F3F4F6]">
-
           {!embedded && (
             <section className="relative h-64 md:h-80 w-full overflow-hidden flex items-center justify-center">
               <div
@@ -284,8 +313,7 @@ const ActsExplorer = ({ embedded = false }) => {
           )}
 
           <div className="container mx-auto px-4 md:px-8 py-8 max-w-7xl">
-
-            {/* Search Filters */}
+            {/* Search Filter Bar */}
             <div className={`mb-8 ${!showFilters && "hidden md:block"}`}>
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-1">
                 <SearchFilter
@@ -298,7 +326,7 @@ const ActsExplorer = ({ embedded = false }) => {
               </div>
             </div>
 
-            {/* Header */}
+            {/* List Header */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-800">
                 {searchTerm || filters.category || filters.status
@@ -311,12 +339,12 @@ const ActsExplorer = ({ embedded = false }) => {
               </span>
             </div>
 
-            {/* Grid */}
+            {/* Content Grid */}
             <motion.div
               layout
               className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
             >
-              <AnimatePresence>
+              <AnimatePresence mode="popLayout">
                 {currentItems.map((item, index) => (
                   <ActCard key={item.id} act={item} index={index} />
                 ))}
@@ -328,7 +356,6 @@ const ActsExplorer = ({ embedded = false }) => {
               <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                 <MenuBookIcon style={{ fontSize: 60, opacity: 0.2 }} className="mb-4" />
                 <p className="text-lg font-medium">No acts match your search.</p>
-
                 <button
                   onClick={() => {
                     setSearchTerm("");
@@ -341,7 +368,7 @@ const ActsExplorer = ({ embedded = false }) => {
               </div>
             )}
 
-            {/* Pagination */}
+            {/* Pagination UI */}
             {totalPages > 1 && (
               <div className="flex justify-center mt-12 mb-8">
                 <div className="flex gap-2 bg-white p-2 rounded-lg shadow-sm border border-gray-200">
