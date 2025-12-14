@@ -11,8 +11,7 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import { useNavigate } from "react-router-dom";
 
 /**
- * FIXED: SidebarContent is now outside the main component.
- * This prevents the sidebar from re-mounting every time the state changes.
+ * SidebarContent: Refined for better scrolling and visibility
  */
 const SidebarContent = ({ 
   actsByYear, 
@@ -25,9 +24,9 @@ const SidebarContent = ({
   const allCollapsed = Object.values(collapsedYears).every(Boolean);
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-white w-full">
       {/* Header section of Sidebar */}
-      <div className="p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+      <div className="shrink-0 p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-20">
         <h3 className="font-bold text-gray-800 flex items-center gap-2">
           <MenuBookIcon className="text-blue-600" fontSize="small" />
           Directory
@@ -47,21 +46,21 @@ const SidebarContent = ({
         </button>
       </div>
 
-      {/* Scrollable list of years/acts */}
+      {/* Scrollable list of years/acts - Ensure flex-grow and overflow */}
       <div className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
         {Object.entries(actsByYear).map(([year, list]) => (
-          <div key={year} className="group">
+          <div key={year} className="mb-2">
             <button
               onClick={() => toggleYear(year)}
               className={`w-full flex items-center justify-between p-3 rounded-lg text-sm transition-colors ${
                 !collapsedYears[year]
-                  ? "bg-gray-50 text-blue-700 font-semibold"
+                  ? "bg-blue-50 text-blue-700 font-semibold"
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
               <span className="flex items-center gap-2">
                 {year}
-                <span className="bg-gray-200 text-gray-600 text-[10px] px-2 py-0.5 rounded-full">
+                <span className="bg-white/50 text-gray-600 text-[10px] px-2 py-0.5 rounded-full border border-gray-200">
                   {list.length}
                 </span>
               </span>
@@ -84,13 +83,13 @@ const SidebarContent = ({
                   className="overflow-hidden"
                 >
                   {list.map((a) => (
-                    <li key={a.id} className="pl-4 pr-2 py-1">
+                    <li key={a.id} className="pl-4 pr-2 py-1 mt-1">
                       <button
                         onClick={() => {
                           navigate(`/act/${a.id}`);
-                          if (onItemClick) onItemClick(); // Close mobile sidebar
+                          if (onItemClick) onItemClick(); 
                         }}
-                        className="w-full text-left text-sm text-gray-500 hover:text-blue-600 hover:translate-x-1 transition-all truncate block py-1 border-l-2 border-transparent hover:border-blue-300 pl-3"
+                        className="w-full text-left text-sm text-gray-500 hover:text-blue-600 hover:translate-x-1 transition-all truncate block py-2 border-l-2 border-transparent hover:border-blue-300 pl-3"
                         title={a.title}
                       >
                         {a.title}
@@ -105,13 +104,13 @@ const SidebarContent = ({
       </div>
 
       {/* Footer section of Sidebar */}
-      <div className="p-4 border-t border-gray-100 bg-gray-50 mt-auto">
+      <div className="shrink-0 p-4 border-t border-gray-100 bg-gray-50">
         <button
           onClick={() => {
             navigate("/compare");
             if (onItemClick) onItemClick();
           }}
-          className="w-full py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium shadow-lg hover:bg-black transition-transform active:scale-95"
+          className="w-full py-3 rounded-lg bg-gray-900 text-white text-sm font-medium shadow-lg hover:bg-black transition-transform active:scale-95"
         >
           Compare Acts
         </button>
@@ -165,7 +164,6 @@ const ActsExplorer = ({ embedded = false }) => {
     setCurrentPage(1);
   }, [searchTerm, filters, acts]);
 
-  // Pagination
   const currentItems = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredActs.slice(start, start + itemsPerPage);
@@ -173,7 +171,6 @@ const ActsExplorer = ({ embedded = false }) => {
 
   const totalPages = Math.ceil(filteredActs.length / itemsPerPage);
 
-  // Grouping by Year
   const actsByYear = useMemo(() => {
     const grouped = {};
     acts.forEach((a) => {
@@ -191,19 +188,10 @@ const ActsExplorer = ({ embedded = false }) => {
     setCollapsedYears((prev) => ({ ...prev, [year]: !prev[year] }));
 
   const filterOptions = [
-    {
-      type: "category",
-      label: "Categories",
-      values: ["Income Tax", "Corporate Tax", "Property Tax", "Sales Tax"],
-    },
-    {
-      type: "status",
-      label: "Status",
-      values: ["Active", "Draft", "Archived"],
-    },
+    { type: "category", label: "Categories", values: ["Income Tax", "Corporate Tax", "Property Tax", "Sales Tax"] },
+    { type: "status", label: "Status", values: ["Active", "Draft", "Archived"] },
   ];
 
-  // Shared props for Sidebar
   const sidebarProps = {
     actsByYear,
     collapsedYears,
@@ -218,14 +206,14 @@ const ActsExplorer = ({ embedded = false }) => {
       {/* MOBILE SIDEBAR OVERLAY & DRAWER */}
       <AnimatePresence>
         {isMobileSidebarOpen && (
-          <>
+          <div className="fixed inset-0 z-[100] lg:hidden">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.4 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileSidebarOpen(false)}
-              className="fixed inset-0 bg-black z-[60] lg:hidden"
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             />
 
             {/* Sidebar Drawer */}
@@ -234,63 +222,60 @@ const ActsExplorer = ({ embedded = false }) => {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-[85%] max-w-xs bg-white z-[70] shadow-2xl lg:hidden flex flex-col overflow-hidden"
+              className="absolute inset-y-0 left-0 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col"
             >
-              {/* Close Button Inside Drawer */}
-              <div className="absolute top-4 right-4 z-[80]">
-                <button
-                  onClick={() => setIsMobileSidebarOpen(false)}
-                  className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
-                >
-                  <CloseIcon fontSize="small" />
-                </button>
-              </div>
+              {/* Floating Close Button for Mobile */}
+              <button
+                onClick={() => setIsMobileSidebarOpen(false)}
+                className="absolute top-4 -right-12 p-2 bg-white rounded-full shadow-lg lg:hidden"
+              >
+                <CloseIcon fontSize="small" />
+              </button>
 
-              {/* Sidebar Content Inside Mobile Drawer */}
               <SidebarContent 
                 {...sidebarProps} 
                 onItemClick={() => setIsMobileSidebarOpen(false)} 
               />
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
 
       {/* MOBILE HEADER */}
-      <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between z-30 relative">
+      <header className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between z-40">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMobileSidebarOpen(true)}
-            className="p-1 hover:bg-gray-100 rounded"
+            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
           >
-            <MenuIcon className="text-gray-600" />
+            <MenuIcon className="text-gray-700" />
           </button>
-          <span className="font-bold text-lg tracking-tight">Acts Explorer</span>
+          <span className="font-bold text-gray-900 tracking-tight">Acts Explorer</span>
         </div>
 
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`p-2 rounded ${
-            showFilters ? "bg-blue-50 text-blue-600" : "text-gray-500"
+          className={`p-2 rounded-md ${
+            showFilters ? "bg-blue-50 text-blue-600" : "text-gray-500 hover:bg-gray-100"
           }`}
         >
           <FilterListIcon />
         </button>
-      </div>
+      </header>
 
-      <div className="flex flex-1 overflow-hidden relative">
+      <div className="flex flex-1 overflow-hidden">
         
         {/* DESKTOP SIDEBAR */}
-        <aside className="hidden lg:block w-72 h-full flex-shrink-0 z-20 shadow-sm border-r border-gray-200 bg-white">
+        <aside className="hidden lg:block w-72 h-full flex-shrink-0 border-r border-gray-200 bg-white shadow-sm">
           <SidebarContent {...sidebarProps} />
         </aside>
 
         {/* MAIN CONTENT AREA */}
-        <main className="flex-1 overflow-y-auto scroll-smooth bg-[#F3F4F6]">
+        <main className="flex-1 overflow-y-auto bg-[#F8FAFC]">
           {!embedded && (
-            <section className="relative h-64 md:h-80 w-full overflow-hidden flex items-center justify-center">
+            <section className="relative h-48 md:h-64 w-full flex items-center justify-center bg-gray-900">
               <div
-                className="absolute inset-0 bg-gray-900 opacity-40"
+                className="absolute inset-0 opacity-40"
                 style={{
                   backgroundImage: `url(/acts-bg.jpg)`,
                   backgroundSize: "cover",
@@ -301,20 +286,20 @@ const ActsExplorer = ({ embedded = false }) => {
                 <motion.h1
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
-                  className="text-3xl md:text-5xl font-extrabold text-white mb-2 tracking-tight"
+                  className="text-2xl md:text-4xl font-extrabold text-white mb-2"
                 >
                   Legislative Acts
                 </motion.h1>
-                <p className="text-gray-200 text-sm md:text-base max-w-xl mx-auto">
-                  Comprehensive digital archive of all acts, regulations, and bylaws.
+                <p className="text-gray-300 text-xs md:text-sm max-w-lg mx-auto">
+                  Search through the complete digital archive of regulations and bylaws.
                 </p>
               </div>
             </section>
           )}
 
-          <div className="container mx-auto px-4 md:px-8 py-8 max-w-7xl">
+          <div className="container mx-auto px-4 py-8 max-w-6xl">
             {/* Search Filter Bar */}
-            <div className={`mb-8 ${!showFilters && "hidden md:block"}`}>
+            <div className={`mb-6 ${!showFilters && "hidden md:block"}`}>
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-1">
                 <SearchFilter
                   searchTerm={searchTerm}
@@ -328,22 +313,16 @@ const ActsExplorer = ({ embedded = false }) => {
 
             {/* List Header */}
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-800">
-                {searchTerm || filters.category || filters.status
-                  ? "Search Results"
-                  : "Recent Acts"}
+              <h2 className="text-lg font-bold text-gray-800">
+                {searchTerm || filters.category || filters.status ? "Results" : "Recent Acts"}
               </h2>
-
-              <span className="text-sm text-gray-500 bg-white px-3 py-1 rounded-full border border-gray-200">
+              <span className="text-xs font-medium text-gray-500 bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm">
                 {filteredActs.length} Documents
               </span>
             </div>
 
             {/* Content Grid */}
-            <motion.div
-              layout
-              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
-            >
+            <motion.div layout className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               <AnimatePresence mode="popLayout">
                 {currentItems.map((item, index) => (
                   <ActCard key={item.id} act={item} index={index} />
@@ -353,32 +332,23 @@ const ActsExplorer = ({ embedded = false }) => {
 
             {/* Empty State */}
             {currentItems.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                <MenuBookIcon style={{ fontSize: 60, opacity: 0.2 }} className="mb-4" />
-                <p className="text-lg font-medium">No acts match your search.</p>
-                <button
-                  onClick={() => {
-                    setSearchTerm("");
-                    setFilters({ category: "", status: "" });
-                  }}
-                  className="mt-4 text-blue-600 hover:underline"
-                >
-                  Clear filters
-                </button>
+              <div className="text-center py-20">
+                <MenuBookIcon className="mx-auto text-gray-200 mb-4" style={{ fontSize: 48 }} />
+                <p className="text-gray-500">No acts found matching your criteria.</p>
               </div>
             )}
 
-            {/* Pagination UI */}
+            {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center mt-12 mb-8">
-                <div className="flex gap-2 bg-white p-2 rounded-lg shadow-sm border border-gray-200">
+              <div className="flex justify-center mt-10">
+                <div className="flex gap-1 bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
                     <button
                       key={n}
                       onClick={() => setCurrentPage(n)}
-                      className={`w-10 h-10 rounded-md font-medium text-sm transition-all ${
+                      className={`w-9 h-9 rounded-md text-sm font-semibold transition-all ${
                         currentPage === n
-                          ? "bg-gray-900 text-white shadow-md scale-105"
+                          ? "bg-blue-600 text-white shadow-md"
                           : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
