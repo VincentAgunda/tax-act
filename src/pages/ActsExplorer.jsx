@@ -206,28 +206,31 @@ const ActsExplorer = ({ embedded = false }) => {
       {/* MOBILE SIDEBAR OVERLAY & DRAWER */}
       <AnimatePresence>
         {isMobileSidebarOpen && (
-          <div className="fixed inset-0 z-[100] lg:hidden">
-            {/* Backdrop */}
+          <div className="fixed inset-0 z-[100] lg:hidden flex justify-start">
+            {/* 1. The Backdrop (Blur) */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               onClick={() => setIsMobileSidebarOpen(false)}
-              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/30 backdrop-blur-sm z-10"
             />
 
-            {/* Sidebar Drawer */}
+            {/* 2. The Sidebar Drawer */}
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="absolute inset-y-0 left-0 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col"
+              // relative and z-20 force it on top of the backdrop
+              className="relative z-20 w-80 max-w-[85vw] h-full bg-white shadow-2xl flex flex-col"
+              onClick={(e) => e.stopPropagation()} // Stop closing on sidebar click
             >
               {/* Floating Close Button for Mobile */}
               <button
                 onClick={() => setIsMobileSidebarOpen(false)}
-                className="absolute top-4 -right-12 p-2 bg-white rounded-full shadow-lg lg:hidden"
+                className="absolute top-4 -right-12 p-2 bg-white text-gray-800 rounded-full shadow-lg lg:hidden"
               >
                 <CloseIcon fontSize="small" />
               </button>
